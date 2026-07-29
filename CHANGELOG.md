@@ -4,10 +4,22 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 
 ## [Unreleased]
 
+### Fixed
+- Timer display now correctly clamps custom duration field values to match the applied timer duration.
+
 ### Changed
 - Documented dev vs start scripts and build commands in README.
 
 ### Added
+- Core Stians game logic (letter drawing, review turn order, round scoring, and winner calculation), not yet wired into the UI.
+- Countdown timer now has a seconds input alongside minutes, so custom durations aren't limited to whole minutes.
+- Implementation plan for Timer seconds input and Stians game module.
+- Design document for Timer seconds input and Stians game module.
+- Implementation plan for new modules (dice roller, Nærmest tusen, Elevtrekker history) and Quiz-arena split.
+- Git worktrees are now excluded from version control.
+- Design document for dice roller, Nærmest tusen, Elevtrekker history, and Quiz-arena create/play split.
+- Implementation plan for dark mode, custom titlebar, and window size.
+- Design document for dark mode, custom titlebar, and window size changes.
 - Scaffolded the SkoolBox desktop app (Tauri 2.0 + React 19 + Vite 7), with Rust in `src-tauri/` and the frontend in `src/`.
 - Tailwind v4 design system (indigo/lime/peach/coral palette, Fredoka/Nunito fonts) matching the classroom-whiteboard brief.
 - Zustand store persisted via `tauri-plugin-store`, shared across all modules (class lists, active class, settings).
