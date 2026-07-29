@@ -9,6 +9,7 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 - Increased the default window size to 1800x1050 for more workspace on launch.
 
 ### Added
+- Added FontAwesome icon library for use in the app's logo.
 - Scaffolded the SkoolBox desktop app (Tauri 2.0 + React 19 + Vite 7), with Rust in `src-tauri/` and the frontend in `src/`.
 - Tailwind v4 design system (indigo/lime/peach/coral palette, Fredoka/Nunito fonts) matching the classroom-whiteboard brief.
 - Zustand store persisted via `tauri-plugin-store`, shared across all modules (class lists, active class, settings).
