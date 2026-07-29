@@ -4,6 +4,9 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 
 ## [Unreleased]
 
+### Changed
+- Documented dev vs start scripts and build commands in README.
+
 ### Added
 - Scaffolded the SkoolBox desktop app (Tauri 2.0 + React 19 + Vite 7), with Rust in `src-tauri/` and the frontend in `src/`.
 - Tailwind v4 design system (indigo/lime/peach/coral palette, Fredoka/Nunito fonts) matching the classroom-whiteboard brief.
