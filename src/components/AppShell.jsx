@@ -24,9 +24,6 @@ function AppShell({ children }) {
               <Home size={26} aria-hidden="true" />
             </button>
           )}
-          <h1 className="font-heading text-2xl font-semibold text-primary">
-            SkoolBox
-          </h1>
         </div>
 
         <div className="flex items-center gap-4">
