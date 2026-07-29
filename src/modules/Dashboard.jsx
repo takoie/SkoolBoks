@@ -1,4 +1,11 @@
-import { Dices, Trophy, Timer as TimerIcon, Users, Hash } from "lucide-react";
+import {
+  Dices,
+  Trophy,
+  Timer as TimerIcon,
+  Users,
+  Hash,
+  Dice5,
+} from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import ModuleCard from "../components/ModuleCard";
 
@@ -37,6 +44,13 @@ const MODULES = [
     title: "Nærmest tusen",
     description: "Trekk 9 siffer og kom nærmest 1000.",
     accent: "peach",
+  },
+  {
+    id: "dice",
+    icon: Dice5,
+    title: "Terningkast",
+    description: "Kast en eller flere terninger.",
+    accent: "coral",
   },
 ];
 

@@ -6,6 +6,7 @@ import Jeopardy from "./modules/Jeopardy";
 import Timer from "./modules/Timer";
 import ClassList from "./modules/ClassList";
 import NearestThousand from "./modules/NearestThousand";
+import DiceRoller from "./modules/DiceRoller";
 
 const MODULE_COMPONENTS = {
   dashboard: Dashboard,
@@ -14,6 +15,7 @@ const MODULE_COMPONENTS = {
   timer: Timer,
   classlist: ClassList,
   nearestthousand: NearestThousand,
+  dice: DiceRoller,
 };
 
 function App() {
