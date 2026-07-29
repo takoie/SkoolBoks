@@ -59,16 +59,17 @@ function Timer() {
     setRunning(false);
     setDuration(total);
     setRemaining(total);
+    return { clampedMinutes, clampedSeconds };
   }
 
   function handleCustomMinutes(e) {
-    setCustomMinutes(e.target.value);
-    applyCustomDuration(e.target.value, customSeconds);
+    const { clampedMinutes } = applyCustomDuration(e.target.value, customSeconds);
+    setCustomMinutes(clampedMinutes);
   }
 
   function handleCustomSeconds(e) {
-    setCustomSeconds(e.target.value);
-    applyCustomDuration(customMinutes, e.target.value);
+    const { clampedSeconds } = applyCustomDuration(customMinutes, e.target.value);
+    setCustomSeconds(clampedSeconds);
   }
 
   function reset() {
