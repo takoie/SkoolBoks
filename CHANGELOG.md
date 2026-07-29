@@ -5,6 +5,8 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 ## [Unreleased]
 
 ### Changed
+- Replaced the native OS title bar with the app's custom branded title bar.
+- Removed the duplicate "SkoolBox" heading from the app shell now that the title bar shows the logo and name.
 - Documented dev vs start scripts and build commands in README.
 - Increased the default window size to 1800x1050 for more workspace on launch.
 
@@ -12,6 +14,7 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 - Rebalanced dark mode's primary color so button text and standalone primary-colored text both meet accessible contrast levels.
 
 ### Added
+- Added a custom title bar with logo, theme toggle, and window controls.
 - Added dark mode color tokens, with the app now defaulting to dark mode.
 - Theme preference is now persisted in settings and kept in sync with the app's dark/light appearance at runtime.
 - Added FontAwesome icon library for use in the app's logo.
