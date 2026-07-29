@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useAppStore } from "./store/useAppStore";
 import AppShell from "./components/AppShell";
+import TitleBar from "./components/TitleBar";
 import Dashboard from "./modules/Dashboard";
 import SpinWheel from "./modules/SpinWheel";
 import Jeopardy from "./modules/Jeopardy";
@@ -25,9 +26,12 @@ function App() {
   }, [theme]);
 
   return (
-    <AppShell>
-      <ActiveComponent />
-    </AppShell>
+    <>
+      <TitleBar />
+      <AppShell>
+        <ActiveComponent />
+      </AppShell>
+    </>
   );
 }
 
