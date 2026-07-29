@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useAppStore } from "./store/useAppStore";
 import AppShell from "./components/AppShell";
 import TitleBar from "./components/TitleBar";
+import ResizeHandles from "./components/ResizeHandles";
 import Dashboard from "./modules/Dashboard";
 import SpinWheel from "./modules/SpinWheel";
 import Jeopardy from "./modules/Jeopardy";
@@ -27,6 +28,7 @@ function App() {
 
   return (
     <>
+      <ResizeHandles />
       <TitleBar />
       <AppShell>
         <ActiveComponent />
