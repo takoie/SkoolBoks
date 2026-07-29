@@ -6,6 +6,7 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 
 ### Changed
 - Documented dev vs start scripts and build commands in README.
+- Increased the default window size to 1800x1050 for more workspace on launch.
 
 ### Added
 - Scaffolded the SkoolBox desktop app (Tauri 2.0 + React 19 + Vite 7), with Rust in `src-tauri/` and the frontend in `src/`.
