@@ -23,6 +23,8 @@ function Timer() {
   const [duration, setDuration] = useState(300);
   const [remaining, setRemaining] = useState(300);
   const [running, setRunning] = useState(false);
+  const [customMinutes, setCustomMinutes] = useState(5);
+  const [customSeconds, setCustomSeconds] = useState(0);
   const intervalRef = useRef(null);
 
   useEffect(() => {
@@ -46,14 +48,27 @@ function Timer() {
     setRunning(false);
     setDuration(seconds);
     setRemaining(seconds);
+    setCustomMinutes(Math.floor(seconds / 60));
+    setCustomSeconds(seconds % 60);
+  }
+
+  function applyCustomDuration(minutes, seconds) {
+    const clampedMinutes = Math.max(0, Math.min(60, Number(minutes) || 0));
+    const clampedSeconds = Math.max(0, Math.min(59, Number(seconds) || 0));
+    const total = clampedMinutes * 60 + clampedSeconds;
+    setRunning(false);
+    setDuration(total);
+    setRemaining(total);
   }
 
   function handleCustomMinutes(e) {
-    const minutes = Math.max(0, Math.min(60, Number(e.target.value) || 0));
-    const seconds = minutes * 60;
-    setRunning(false);
-    setDuration(seconds);
-    setRemaining(seconds);
+    setCustomMinutes(e.target.value);
+    applyCustomDuration(e.target.value, customSeconds);
+  }
+
+  function handleCustomSeconds(e) {
+    setCustomSeconds(e.target.value);
+    applyCustomDuration(customMinutes, e.target.value);
   }
 
   function reset() {
@@ -101,11 +116,20 @@ function Timer() {
             type="number"
             min={0}
             max={60}
-            defaultValue={5}
+            value={customMinutes}
             onChange={handleCustomMinutes}
             className="min-h-touch w-20 rounded-xl2 border-2 border-ink/10 bg-surface px-3 py-2 text-center font-body text-lg text-ink"
           />
           min
+          <input
+            type="number"
+            min={0}
+            max={59}
+            value={customSeconds}
+            onChange={handleCustomSeconds}
+            className="min-h-touch w-20 rounded-xl2 border-2 border-ink/10 bg-surface px-3 py-2 text-center font-body text-lg text-ink"
+          />
+          sek
         </label>
       </div>
 
