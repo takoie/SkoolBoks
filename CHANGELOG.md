@@ -10,6 +10,7 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 
 ### Added
 - Added dark mode color tokens, with the app now defaulting to dark mode.
+- Theme preference is now persisted in settings and kept in sync with the app's dark/light appearance at runtime.
 - Added FontAwesome icon library for use in the app's logo.
 - Scaffolded the SkoolBox desktop app (Tauri 2.0 + React 19 + Vite 7), with Rust in `src-tauri/` and the frontend in `src/`.
 - Tailwind v4 design system (indigo/lime/peach/coral palette, Fredoka/Nunito fonts) matching the classroom-whiteboard brief.
