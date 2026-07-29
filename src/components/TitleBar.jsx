@@ -24,7 +24,7 @@ function TitleBar() {
 
       <div className="h-full flex-1" data-tauri-drag-region onDoubleClick={() => appWindow.toggleMaximize()} />
 
-      <div className="flex h-full items-center">
+      <div className="relative z-[60] flex h-full items-center">
         <button
           type="button"
           onClick={() => setSettings({ theme: isDark ? "light" : "dark" })}
