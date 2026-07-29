@@ -11,6 +11,12 @@ import {
 
 const DEFAULT_CLASS_ID = "default";
 
+function clampNumber(value, min, max, fallback) {
+  const parsed = Number(value);
+  const safe = Number.isFinite(parsed) ? parsed : fallback;
+  return Math.max(min, Math.min(max, safe));
+}
+
 function makeInitialStiansGame() {
   return {
     groups: [],
@@ -133,14 +139,19 @@ export const useAppStore = create(
         }),
 
       setStiansCategories: (categories) =>
-        set((s) => ({ stiansGame: { ...s.stiansGame, categories } })),
+        set((s) => ({
+          stiansGame: { ...s.stiansGame, categories: [...new Set(categories)] },
+        })),
 
       startStiansGame: () =>
         set((s) => ({ stiansGame: { ...s.stiansGame, phase: "idle" } })),
 
       setStiansPointsPerRound: (n) =>
         set((s) => ({
-          stiansGame: { ...s.stiansGame, pointsPerRound: Math.max(1, Number(n) || 1) },
+          stiansGame: {
+            ...s.stiansGame,
+            pointsPerRound: clampNumber(n, 1, Infinity, 1),
+          },
         })),
       setStiansBonusEnabled: (enabled) =>
         set((s) => ({
@@ -148,13 +159,16 @@ export const useAppStore = create(
         })),
       setStiansBonusPoints: (n) =>
         set((s) => ({
-          stiansGame: { ...s.stiansGame, bonusPoints: Math.max(1, Number(n) || 1) },
+          stiansGame: {
+            ...s.stiansGame,
+            bonusPoints: clampNumber(n, 1, Infinity, 1),
+          },
         })),
       setStiansTimerSeconds: (n) =>
         set((s) => ({
           stiansGame: {
             ...s.stiansGame,
-            timerSeconds: Math.max(5, Math.min(600, Number(n) || 60)),
+            timerSeconds: clampNumber(n, 5, 600, 60),
           },
         })),
 
@@ -206,6 +220,8 @@ export const useAppStore = create(
 
       stopStiansWriting: (groupId = null) =>
         set((s) => {
+          if (s.stiansGame.groups.length === 0 || s.stiansGame.categories.length === 0)
+            return {};
           const allGroupIds = s.stiansGame.groups.map((g) => g.id);
           const order = groupId
             ? [groupId, ...allGroupIds.filter((id) => id !== groupId)]
