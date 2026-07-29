@@ -28,6 +28,7 @@ function NearestThousand() {
   }
 
   function reset() {
+    drawsRef.current = [];
     setDraws([]);
   }
 
