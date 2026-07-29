@@ -1,0 +1,67 @@
+@import "tailwindcss";
+@import "@fontsource/fredoka/400.css";
+@import "@fontsource/fredoka/500.css";
+@import "@fontsource/fredoka/600.css";
+@import "@fontsource/fredoka/700.css";
+@import "@fontsource/nunito/400.css";
+@import "@fontsource/nunito/600.css";
+@import "@fontsource/nunito/700.css";
+
+@theme {
+  --color-primary: #4338ca;
+  --color-primary-hover: #3730a3;
+  --color-primary-active: #312e81;
+  --color-secondary: #3b82f6;
+  --color-accent-lime: #84cc16;
+  --color-accent-peach: #fdba74;
+  --color-accent-coral: #fb7185;
+  --color-surface: #ffffff;
+  --color-canvas: #f5f3ff;
+  --color-canvas-dark: #1e1b4b;
+  --color-ink: #1e1b4b;
+  --color-destructive: #dc2626;
+
+  --font-heading: "Fredoka", sans-serif;
+  --font-body: "Nunito", sans-serif;
+
+  --radius-xl2: 20px;
+
+  --shadow-clay: 0 2px 0 rgba(30, 27, 75, 0.15), 0 8px 20px -6px rgba(67, 56, 202, 0.25);
+
+  --spacing-touch: 64px;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-secondary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
