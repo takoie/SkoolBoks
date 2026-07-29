@@ -6,6 +6,7 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 
 ### Fixed
 - "Nærmest tusen": `drawNext` now reads/writes a ref-mirrored draw list instead of the `draws` closure, so two clicks racing ahead of a re-render can no longer drop a digit or double-fire the tick/tada sound.
+- "Nærmest tusen": resetting the game now clears the draw list immediately, preventing a stale digit from sneaking in if you draw right after a reset.
 
 ### Changed
 - Documented dev vs start scripts and build commands in README.
@@ -21,3 +22,4 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 - Persisted `quizzes` slice in the Zustand store (create/update/delete quizzes) to back upcoming quiz editor and player views.
 - `findClosestArrangement` math helper for the "Nærmest tusen" game, finding the 3x3 digit arrangement whose sum lands closest to 1000.
 - "Nærmest tusen" module: draw 9 digits and reveal the closest-to-1000 arrangement, wired into the dashboard and app routing.
+- "Terningkast" dice roller module, wired into the dashboard and app routing.
