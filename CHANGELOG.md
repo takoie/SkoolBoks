@@ -5,12 +5,14 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 ## [Unreleased]
 
 ### Fixed
+- Stians game: Fixed numeric setters to correctly clamp zero values, deduplicate category lists, and prevent deadlock in empty reviews.
 - Timer display now correctly clamps custom duration field values to match the applied timer duration.
 
 ### Changed
 - Documented dev vs start scripts and build commands in README.
 
 ### Added
+- Stians game module is now navigable from the dashboard, with a Setup phase for adding groups and picking categories from the shared bank.
 - Persisted store state for the Stians game (groups, categories, letter draws, scoring config, review progress) and a shared category bank, not yet wired into the UI.
 - Core Stians game logic (letter drawing, review turn order, round scoring, and winner calculation), not yet wired into the UI.
 - Countdown timer now has a seconds input alongside minutes, so custom durations aren't limited to whole minutes.
