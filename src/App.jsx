@@ -5,6 +5,7 @@ import SpinWheel from "./modules/SpinWheel";
 import Jeopardy from "./modules/Jeopardy";
 import Timer from "./modules/Timer";
 import ClassList from "./modules/ClassList";
+import StiansGame from "./modules/StiansGame";
 
 const MODULE_COMPONENTS = {
   dashboard: Dashboard,
@@ -12,6 +13,7 @@ const MODULE_COMPONENTS = {
   jeopardy: Jeopardy,
   timer: Timer,
   classlist: ClassList,
+  stiansgame: StiansGame,
 };
 
 function App() {

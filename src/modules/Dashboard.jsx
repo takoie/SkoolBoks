@@ -1,4 +1,4 @@
-import { Dices, Trophy, Timer as TimerIcon, Users } from "lucide-react";
+import { Dices, Trophy, Timer as TimerIcon, Users, Puzzle } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import ModuleCard from "../components/ModuleCard";
 
@@ -30,6 +30,13 @@ const MODULES = [
     title: "Klasseliste",
     description: "Legg inn og administrer elevlister.",
     accent: "primary",
+  },
+  {
+    id: "stiansgame",
+    icon: Puzzle,
+    title: "Stians game",
+    description: "Bokstav, kategorier og poeng — lagspill i runder.",
+    accent: "secondary",
   },
 ];
 

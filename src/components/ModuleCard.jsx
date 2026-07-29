@@ -1,6 +1,7 @@
 function ModuleCard({ icon: Icon, title, description, accent = "primary", onClick }) {
   const accentClasses = {
     primary: "bg-primary text-white",
+    secondary: "bg-secondary text-white",
     lime: "bg-accent-lime text-ink",
     peach: "bg-accent-peach text-ink",
     coral: "bg-accent-coral text-white",
