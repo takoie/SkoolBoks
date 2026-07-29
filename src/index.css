@@ -31,6 +31,18 @@
   --spacing-touch: 64px;
 }
 
+.dark {
+  --color-surface: #2a265c;
+  --color-canvas: #1e1b4b;
+  --color-ink: #f5f3ff;
+
+  --color-primary: #818cf8;
+  --color-primary-hover: #a5b4fc;
+  --color-primary-active: #c7d2fe;
+
+  --shadow-clay: 0 2px 0 rgba(0, 0, 0, 0.5), 0 8px 20px -6px rgba(0, 0, 0, 0.55);
+}
+
 html,
 body,
 #root {
