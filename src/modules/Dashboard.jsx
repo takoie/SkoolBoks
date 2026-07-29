@@ -1,4 +1,4 @@
-import { Dices, Trophy, Timer as TimerIcon, Users } from "lucide-react";
+import { Dices, Trophy, Timer as TimerIcon, Users, Hash } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import ModuleCard from "../components/ModuleCard";
 
@@ -30,6 +30,13 @@ const MODULES = [
     title: "Klasseliste",
     description: "Legg inn og administrer elevlister.",
     accent: "primary",
+  },
+  {
+    id: "nearestthousand",
+    icon: Hash,
+    title: "Nærmest tusen",
+    description: "Trekk 9 siffer og kom nærmest 1000.",
+    accent: "peach",
   },
 ];
 

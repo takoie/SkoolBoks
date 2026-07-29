@@ -17,3 +17,4 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 - `npm run start` script to launch the desktop app in dev mode (`npm run dev` remains Vite-only, as required by `beforeDevCommand`).
 - Persisted `quizzes` slice in the Zustand store (create/update/delete quizzes) to back upcoming quiz editor and player views.
 - `findClosestArrangement` math helper for the "Nærmest tusen" game, finding the 3x3 digit arrangement whose sum lands closest to 1000.
+- "Nærmest tusen" module: draw 9 digits and reveal the closest-to-1000 arrangement, wired into the dashboard and app routing.
