@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useAppStore } from "./store/useAppStore";
 import AppShell from "./components/AppShell";
 import Dashboard from "./modules/Dashboard";
@@ -16,7 +17,12 @@ const MODULE_COMPONENTS = {
 
 function App() {
   const activeModule = useAppStore((s) => s.activeModule);
+  const theme = useAppStore((s) => s.settings.theme);
   const ActiveComponent = MODULE_COMPONENTS[activeModule] ?? Dashboard;
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme !== "light");
+  }, [theme]);
 
   return (
     <AppShell>
