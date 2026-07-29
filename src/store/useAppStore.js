@@ -58,7 +58,7 @@ export const useAppStore = create(
           },
         })),
 
-      settings: { soundEnabled: true },
+      settings: { soundEnabled: true, theme: "dark" },
       setSettings: (partial) =>
         set((s) => ({ settings: { ...s.settings, ...partial } })),
     }),
