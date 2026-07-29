@@ -8,6 +8,9 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 - Documented dev vs start scripts and build commands in README.
 - Increased the default window size to 1800x1050 for more workspace on launch.
 
+### Fixed
+- Rebalanced dark mode's primary color so button text and standalone primary-colored text both meet accessible contrast levels.
+
 ### Added
 - Added dark mode color tokens, with the app now defaulting to dark mode.
 - Theme preference is now persisted in settings and kept in sync with the app's dark/light appearance at runtime.
