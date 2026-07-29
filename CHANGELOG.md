@@ -4,6 +4,9 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 
 ## [Unreleased]
 
+### Fixed
+- "Nærmest tusen": `drawNext` now reads/writes a ref-mirrored draw list instead of the `draws` closure, so two clicks racing ahead of a re-render can no longer drop a digit or double-fire the tick/tada sound.
+
 ### Changed
 - Documented dev vs start scripts and build commands in README.
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Hash, RotateCcw } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { playSound } from "../lib/sound";
@@ -9,14 +9,20 @@ const TOTAL_ROUNDS = 9;
 function NearestThousand() {
   const soundEnabled = useAppStore((s) => s.settings.soundEnabled);
   const [draws, setDraws] = useState([]);
+  // Mirrors `draws` synchronously so drawNext always sees the true latest
+  // value even if a second click fires before React re-renders (avoids a
+  // stale-closure race that could drop a digit or double-fire a sound).
+  const drawsRef = useRef(draws);
+  drawsRef.current = draws;
 
   const done = draws.length === TOTAL_ROUNDS;
   const fasit = done ? findClosestArrangement(draws) : null;
 
   function drawNext() {
-    if (done) return;
+    if (drawsRef.current.length >= TOTAL_ROUNDS) return;
     const digit = Math.floor(Math.random() * 10);
-    const next = [...draws, digit];
+    const next = [...drawsRef.current, digit];
+    drawsRef.current = next;
     setDraws(next);
     playSound(next.length === TOTAL_ROUNDS ? "tada" : "tick", soundEnabled);
   }
