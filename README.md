@@ -1,6 +1,13 @@
-# Tauri + React
+# SkoolBox
 
-This template should help get you started developing with Tauri and React in Vite.
+Klasserom-app for storskjerm/tavle: elevtrekker, quiz-arena, nedtelling og klasseliste. Bygget med Tauri 2.0 + React + Vite.
+
+## Utvikling
+
+- `npm run dev` — starter kun Vite-frontenden i nettleser (rask UI-iterasjon, ingen Rust-kompilering).
+- `npm run start` — starter selve skrivebordsappen (`tauri dev`), med hot-reload.
+- `npm run build` — bygger frontend til `dist/` (brukes internt av Tauri).
+- `npm run tauri build` — bygger de installerbare filene (NSIS `-setup.exe` og MSI) i `src-tauri/target/release/bundle/`.
 
 ## Recommended IDE Setup
 
