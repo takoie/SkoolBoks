@@ -1,8 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Plus, Trash2, Check, Play } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
-import { getGroupTotal, getCurrentReviewGroupId } from "../lib/stiansGame";
+import {
+  getGroupTotal,
+  getCurrentReviewGroupId,
+  getWinner,
+} from "../lib/stiansGame";
 import { playSound } from "../lib/sound";
+import { fireConfetti } from "../lib/confetti";
 
 function ScoreBoard({ groups, categories, scores }) {
   return (
@@ -617,6 +622,43 @@ function ReviewingPhase() {
   );
 }
 
+function EndedPhase() {
+  const groups = useAppStore((s) => s.stiansGame.groups);
+  const scores = useAppStore((s) => s.stiansGame.scores);
+  const resetStiansGameScores = useAppStore((s) => s.resetStiansGameScores);
+  const resetStiansGameFull = useAppStore((s) => s.resetStiansGameFull);
+
+  const winner = getWinner(groups, scores);
+
+  useEffect(() => {
+    fireConfetti();
+  }, []);
+
+  return (
+    <div className="mx-auto max-w-2xl text-center">
+      <h3 className="mb-4 font-heading text-4xl font-bold text-primary">
+        {winner ? `${winner.name} vinner! 🎉` : "Spillet er over"}
+      </h3>
+      <div className="flex flex-wrap items-center justify-center gap-4">
+        <button
+          type="button"
+          onClick={resetStiansGameScores}
+          className="min-h-touch cursor-pointer rounded-xl2 bg-primary px-6 py-3 font-heading text-lg font-semibold text-white transition-colors hover:bg-primary-hover"
+        >
+          Nytt spill, samme lag/kategorier
+        </button>
+        <button
+          type="button"
+          onClick={resetStiansGameFull}
+          className="min-h-touch cursor-pointer rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-colors hover:bg-ink/5"
+        >
+          Helt nytt spill
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function StiansGame() {
   const phase = useAppStore((s) => s.stiansGame.phase);
   const groups = useAppStore((s) => s.stiansGame.groups);
@@ -634,11 +676,7 @@ function StiansGame() {
       {phase === "idle" && <IdlePhase />}
       {phase === "writing" && <WritingPhase />}
       {phase === "reviewing" && <ReviewingPhase />}
-      {phase === "ended" && (
-        <p className="text-center text-lg text-ink/70">
-          Fase "ended" bygges i neste steg.
-        </p>
-      )}
+      {phase === "ended" && <EndedPhase />}
     </div>
   );
 }
