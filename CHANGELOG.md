@@ -6,10 +6,14 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 
 ### Added
 - Elevtrekker now shows a draw-history sidebar listing every student, marking drawn ones with a numbered badge and strikethrough in draw order.
+- Added a quiz list view for browsing saved quizzes.
+- Added a quiz editor view for naming categories/point levels and filling in question/answer text per cell.
+- Added a quiz player view for running a saved quiz as a Jeopardy-style board, with per-question answer reveal and team scoring.
 
 ### Fixed
 - "Nærmest tusen": `drawNext` now reads/writes a ref-mirrored draw list instead of the `draws` closure, so two clicks racing ahead of a re-render can no longer drop a digit or double-fire the tick/tada sound.
 - "Nærmest tusen": resetting the game now clears the draw list immediately, preventing a stale digit from sneaking in if you draw right after a reset.
+- Quiz player no longer crashes if it's ever mounted with a quiz id that doesn't exist; it now renders nothing instead of throwing.
 
 ### Changed
 - Documented dev vs start scripts and build commands in README.
