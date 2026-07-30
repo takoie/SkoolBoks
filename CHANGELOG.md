@@ -20,3 +20,6 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 
 ### Changed
 - Documented dev vs start scripts and build commands in README.
+
+### Fixed
+- Quiz-arena editor and player now show a friendly "quiz not found" message with a way back instead of a blank page, and the player plays a sound when a question is opened or a team's score changes.
