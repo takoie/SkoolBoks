@@ -11,10 +11,12 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 - Increased the default window size to 1800x1050 for more workspace on launch.
 
 ### Fixed
+- Fixed the app layout to use shared h-screen so the title bar and app shell don't overflow the window together.
 - Rebalanced dark mode's primary color so button text and standalone primary-colored text both meet accessible contrast levels.
 - Fixed the custom title bar's window controls and drag-to-move/resize not working due to missing app permissions.
 - Restored the ability to resize the window by dragging its edges/corners, which was lost when the native title bar was removed.
 - Fixed title bar buttons occasionally being obscured by the window's resize-drag regions.
+- Raised the titlebar button cluster above window resize-handle overlays using z-index.
 
 ### Added
 - Added a custom title bar with logo, theme toggle, and window controls.
