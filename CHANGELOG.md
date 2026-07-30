@@ -5,6 +5,7 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 ## [Unreleased]
 
 ### Changed
+- Updated changelog with pending feature and documentation entries.
 - Documented dev vs start scripts and build commands in README.
 
 ### Added
