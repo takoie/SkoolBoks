@@ -464,7 +464,11 @@ function WritingPhase() {
 
   return (
     <div className="mx-auto max-w-3xl text-center">
-      <div className="mb-6 flex min-h-[160px] w-full items-center justify-center rounded-xl2 border-2 border-ink/10 bg-surface shadow-clay">
+      <div
+        role="status"
+        aria-live="polite"
+        className="mb-6 flex min-h-[160px] w-full items-center justify-center rounded-xl2 border-2 border-ink/10 bg-surface shadow-clay"
+      >
         <span className="font-heading text-7xl font-bold text-primary">
           {currentLetter}
         </span>
@@ -485,7 +489,8 @@ function WritingPhase() {
         <button
           type="button"
           onClick={() => setRunning((r) => !r)}
-          className="min-h-touch cursor-pointer rounded-xl2 bg-primary px-6 py-3 font-heading text-lg font-semibold text-white transition-colors hover:bg-primary-hover"
+          disabled={remaining === 0}
+          className="min-h-touch cursor-pointer rounded-xl2 bg-primary px-6 py-3 font-heading text-lg font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-40"
         >
           {running ? "Pause" : "Start tid"}
         </button>
