@@ -145,9 +145,12 @@ function QuizEditor({ quizId, onDone }) {
                     <input
                       type="number"
                       value={point.value}
-                      onChange={(e) =>
-                        renamePointValue(point.id, Number(e.target.value))
-                      }
+                      onChange={(e) => {
+                        const parsed = Number(e.target.value);
+                        if (Number.isFinite(parsed)) {
+                          renamePointValue(point.id, parsed);
+                        }
+                      }}
                       className="min-h-touch w-20 rounded-xl2 border-2 border-ink/10 bg-surface px-2 py-2 text-center font-heading text-lg font-semibold text-ink"
                     />
                     {quiz.points.length > 1 && (
