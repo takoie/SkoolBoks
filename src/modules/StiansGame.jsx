@@ -526,13 +526,18 @@ function ReviewingPhase() {
   const stiansGame = useAppStore((s) => s.stiansGame);
   const markStiansApproval = useAppStore((s) => s.markStiansApproval);
   const { review, categories, groups, leadGroupId } = stiansGame;
-  const currentButtonRef = useRef(null);
+  const currentRowRef = useRef(null);
 
   const category = review ? categories[review.categoryIndex] : null;
   const currentGroupId = review ? getCurrentReviewGroupId(stiansGame) : null;
+  const currentGroupName = review
+    ? groups.find((g) => g.id === currentGroupId)?.name
+    : null;
 
   useEffect(() => {
-    currentButtonRef.current?.focus();
+    // Focus the row itself (not the approve button) so a stray Enter/Space
+    // right after a phase transition can't silently approve an unreviewed answer.
+    currentRowRef.current?.focus();
   }, [currentGroupId, category]);
 
   if (!review) return null;
@@ -547,6 +552,7 @@ function ReviewingPhase() {
         <h3 className="mb-6 font-heading text-4xl font-bold text-ink">
           {category}
         </h3>
+        <p className="sr-only">{currentGroupName} sin tur</p>
       </div>
 
       <div className="mb-8 flex flex-col items-center gap-3">
@@ -557,6 +563,8 @@ function ReviewingPhase() {
           return (
             <div
               key={groupId}
+              ref={isCurrent ? currentRowRef : null}
+              tabIndex={isCurrent ? -1 : undefined}
               aria-current={isCurrent ? "true" : undefined}
               className={`flex w-full max-w-md items-center justify-between gap-4 rounded-xl2 border-2 px-5 py-3 shadow-clay transition-colors ${
                 isCurrent
@@ -585,7 +593,6 @@ function ReviewingPhase() {
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    ref={currentButtonRef}
                     onClick={() => markStiansApproval(true)}
                     aria-label={`Godkjent for ${group?.name}`}
                     className="min-h-touch cursor-pointer rounded-xl2 bg-accent-lime/80 px-5 py-2 font-heading font-semibold text-ink transition-colors hover:bg-accent-lime"
