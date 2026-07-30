@@ -12,6 +12,7 @@ import { useAppStore } from "../../store/useAppStore";
 
 function makeInitialBoard(quiz) {
   const board = {};
+  if (!quiz) return board;
   quiz.categories.forEach((cat) => {
     quiz.points.forEach((point) => {
       board[`${cat.id}-${point.id}`] = { used: false };
@@ -130,7 +131,7 @@ function QuizPlayer({ quizId, onDone }) {
         {quiz.points.map((point) =>
           quiz.categories.map((cat) => {
             const key = `${cat.id}-${point.id}`;
-            const used = board[key].used;
+            const used = board[key]?.used;
             return (
               <button
                 key={key}
