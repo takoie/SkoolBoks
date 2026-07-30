@@ -9,7 +9,21 @@ function QuizEditor({ quizId, onDone }) {
   const quiz = useAppStore((s) => s.quizzes[quizId]);
   const updateQuiz = useAppStore((s) => s.updateQuiz);
 
-  if (!quiz) return null;
+  if (!quiz) {
+    return (
+      <div className="mx-auto max-w-2xl text-center">
+        <p className="mb-4 text-lg text-ink/70">Fant ikke quizen.</p>
+        <button
+          type="button"
+          onClick={onDone}
+          className="mx-auto flex min-h-touch cursor-pointer items-center gap-2 rounded-xl2 border-2 border-ink/10 px-5 py-2 font-heading font-semibold text-ink transition-colors hover:bg-ink/5"
+        >
+          <ArrowLeft size={20} aria-hidden="true" />
+          Tilbake til quizliste
+        </button>
+      </div>
+    );
+  }
 
   function setCell(catId, pointId, partial) {
     const key = `${catId}-${pointId}`;

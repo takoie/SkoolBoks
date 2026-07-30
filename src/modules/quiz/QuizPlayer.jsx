@@ -9,6 +9,7 @@ import {
   X,
 } from "lucide-react";
 import { useAppStore } from "../../store/useAppStore";
+import { playSound } from "../../lib/sound";
 
 function makeInitialBoard(quiz) {
   const board = {};
@@ -30,18 +31,34 @@ function makeInitialTeams() {
 
 function QuizPlayer({ quizId, onDone }) {
   const quiz = useAppStore((s) => s.quizzes[quizId]);
+  const soundEnabled = useAppStore((s) => s.settings.soundEnabled);
   const [board, setBoard] = useState(() => makeInitialBoard(quiz));
   const [teams, setTeams] = useState(makeInitialTeams);
   const [activeCell, setActiveCell] = useState(null);
   const [answerVisible, setAnswerVisible] = useState(false);
 
-  if (!quiz) return null;
+  if (!quiz) {
+    return (
+      <div className="mx-auto max-w-2xl text-center">
+        <p className="mb-4 text-lg text-ink/70">Fant ikke quizen.</p>
+        <button
+          type="button"
+          onClick={onDone}
+          className="mx-auto flex min-h-touch cursor-pointer items-center gap-2 rounded-xl2 border-2 border-ink/10 px-5 py-2 font-heading font-semibold text-ink transition-colors hover:bg-ink/5"
+        >
+          <ArrowLeft size={20} aria-hidden="true" />
+          Tilbake til quizliste
+        </button>
+      </div>
+    );
+  }
 
   function openCell(catId, pointId) {
     const key = `${catId}-${pointId}`;
     if (board[key].used) return;
     setActiveCell({ catId, pointId });
     setAnswerVisible(false);
+    playSound("ding", soundEnabled);
   }
 
   function closeCell() {
@@ -56,6 +73,7 @@ function QuizPlayer({ quizId, onDone }) {
     setTeams((ts) =>
       ts.map((t) => (t.id === teamId ? { ...t, score: t.score + delta } : t))
     );
+    playSound("tick", soundEnabled);
   }
 
   function resetBoard() {
