@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Plus, Trash2, Check, Play } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
-import { getGroupTotal } from "../lib/stiansGame";
+import { getGroupTotal, getCurrentReviewGroupId } from "../lib/stiansGame";
 import { playSound } from "../lib/sound";
 
 function ScoreBoard({ groups, categories, scores }) {
@@ -522,6 +522,81 @@ function WritingPhase() {
   );
 }
 
+function ReviewingPhase() {
+  const stiansGame = useAppStore((s) => s.stiansGame);
+  const markStiansApproval = useAppStore((s) => s.markStiansApproval);
+  const { review, categories, groups } = stiansGame;
+
+  if (!review) return null;
+  const category = categories[review.categoryIndex];
+  const currentGroupId = getCurrentReviewGroupId(stiansGame);
+  const groupsById = Object.fromEntries(groups.map((g) => [g.id, g]));
+
+  return (
+    <div className="mx-auto max-w-3xl text-center">
+      <p className="mb-2 font-body text-lg text-ink/70">
+        Kategori {review.categoryIndex + 1} av {categories.length}
+      </p>
+      <h3 className="mb-6 font-heading text-4xl font-bold text-ink">
+        {category}
+      </h3>
+
+      <div className="mb-8 flex flex-col items-center gap-3">
+        {review.groupOrder.map((groupId) => {
+          const group = groupsById[groupId];
+          const mark = review.marks[groupId]?.[category];
+          const isCurrent = groupId === currentGroupId;
+          return (
+            <div
+              key={groupId}
+              className={`flex w-full max-w-md items-center justify-between gap-4 rounded-xl2 border-2 px-5 py-3 shadow-clay transition-colors ${
+                isCurrent
+                  ? "border-primary bg-primary/10"
+                  : mark === undefined
+                    ? "border-ink/10 bg-surface opacity-50"
+                    : "border-ink/10 bg-surface"
+              }`}
+            >
+              <span className="font-heading text-xl font-semibold text-ink">
+                {group?.name}
+                {groupId === stiansGame.leadGroupId && " 📣"}
+              </span>
+              {mark === true && (
+                <span className="font-heading font-semibold text-accent-lime">
+                  Godkjent
+                </span>
+              )}
+              {mark === false && (
+                <span className="font-heading font-semibold text-destructive">
+                  Ikke godkjent
+                </span>
+              )}
+              {isCurrent && (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => markStiansApproval(true)}
+                    className="min-h-touch cursor-pointer rounded-xl2 bg-accent-lime/80 px-5 py-2 font-heading font-semibold text-ink transition-colors hover:bg-accent-lime"
+                  >
+                    Godkjent
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => markStiansApproval(false)}
+                    className="min-h-touch cursor-pointer rounded-xl2 bg-destructive/80 px-5 py-2 font-heading font-semibold text-white transition-colors hover:bg-destructive"
+                  >
+                    Ikke godkjent
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function StiansGame() {
   const phase = useAppStore((s) => s.stiansGame.phase);
   const groups = useAppStore((s) => s.stiansGame.groups);
@@ -538,9 +613,10 @@ function StiansGame() {
       <ScoreBoard groups={groups} categories={categories} scores={scores} />
       {phase === "idle" && <IdlePhase />}
       {phase === "writing" && <WritingPhase />}
-      {(phase === "reviewing" || phase === "ended") && (
+      {phase === "reviewing" && <ReviewingPhase />}
+      {phase === "ended" && (
         <p className="text-center text-lg text-ink/70">
-          Fase "{phase}" bygges i neste steg.
+          Fase "ended" bygges i neste steg.
         </p>
       )}
     </div>
