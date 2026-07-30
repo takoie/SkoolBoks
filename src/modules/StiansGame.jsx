@@ -636,7 +636,11 @@ function EndedPhase() {
 
   return (
     <div className="mx-auto max-w-2xl text-center">
-      <h3 className="mb-4 font-heading text-4xl font-bold text-primary">
+      <h3
+        role="status"
+        aria-live="polite"
+        className="mb-4 font-heading text-4xl font-bold text-primary"
+      >
         {winner ? `${winner.name} vinner! 🎉` : "Spillet er over"}
       </h3>
       <div className="flex flex-wrap items-center justify-center gap-4">
