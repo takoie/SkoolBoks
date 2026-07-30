@@ -525,21 +525,29 @@ function WritingPhase() {
 function ReviewingPhase() {
   const stiansGame = useAppStore((s) => s.stiansGame);
   const markStiansApproval = useAppStore((s) => s.markStiansApproval);
-  const { review, categories, groups } = stiansGame;
+  const { review, categories, groups, leadGroupId } = stiansGame;
+  const currentButtonRef = useRef(null);
+
+  const category = review ? categories[review.categoryIndex] : null;
+  const currentGroupId = review ? getCurrentReviewGroupId(stiansGame) : null;
+
+  useEffect(() => {
+    currentButtonRef.current?.focus();
+  }, [currentGroupId, category]);
 
   if (!review) return null;
-  const category = categories[review.categoryIndex];
-  const currentGroupId = getCurrentReviewGroupId(stiansGame);
   const groupsById = Object.fromEntries(groups.map((g) => [g.id, g]));
 
   return (
     <div className="mx-auto max-w-3xl text-center">
-      <p className="mb-2 font-body text-lg text-ink/70">
-        Kategori {review.categoryIndex + 1} av {categories.length}
-      </p>
-      <h3 className="mb-6 font-heading text-4xl font-bold text-ink">
-        {category}
-      </h3>
+      <div role="status" aria-live="polite">
+        <p className="mb-2 font-body text-lg text-ink/70">
+          Kategori {review.categoryIndex + 1} av {categories.length}
+        </p>
+        <h3 className="mb-6 font-heading text-4xl font-bold text-ink">
+          {category}
+        </h3>
+      </div>
 
       <div className="mb-8 flex flex-col items-center gap-3">
         {review.groupOrder.map((groupId) => {
@@ -549,6 +557,7 @@ function ReviewingPhase() {
           return (
             <div
               key={groupId}
+              aria-current={isCurrent ? "true" : undefined}
               className={`flex w-full max-w-md items-center justify-between gap-4 rounded-xl2 border-2 px-5 py-3 shadow-clay transition-colors ${
                 isCurrent
                   ? "border-primary bg-primary/10"
@@ -558,8 +567,9 @@ function ReviewingPhase() {
               }`}
             >
               <span className="font-heading text-xl font-semibold text-ink">
+                {isCurrent && "▶ "}
                 {group?.name}
-                {groupId === stiansGame.leadGroupId && " 📣"}
+                {groupId === leadGroupId && " 📣"}
               </span>
               {mark === true && (
                 <span className="font-heading font-semibold text-accent-lime">
@@ -575,7 +585,9 @@ function ReviewingPhase() {
                 <div className="flex gap-2">
                   <button
                     type="button"
+                    ref={currentButtonRef}
                     onClick={() => markStiansApproval(true)}
+                    aria-label={`Godkjent for ${group?.name}`}
                     className="min-h-touch cursor-pointer rounded-xl2 bg-accent-lime/80 px-5 py-2 font-heading font-semibold text-ink transition-colors hover:bg-accent-lime"
                   >
                     Godkjent
@@ -583,6 +595,7 @@ function ReviewingPhase() {
                   <button
                     type="button"
                     onClick={() => markStiansApproval(false)}
+                    aria-label={`Ikke godkjent for ${group?.name}`}
                     className="min-h-touch cursor-pointer rounded-xl2 bg-destructive/80 px-5 py-2 font-heading font-semibold text-white transition-colors hover:bg-destructive"
                   >
                     Ikke godkjent
