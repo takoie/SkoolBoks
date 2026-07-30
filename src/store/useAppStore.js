@@ -102,6 +102,10 @@ export const useAppStore = create(
       removeCategoryFromBank: (name) =>
         set((s) => ({
           categoryBank: s.categoryBank.filter((c) => c !== name),
+          stiansGame: {
+            ...s.stiansGame,
+            categories: s.stiansGame.categories.filter((c) => c !== name),
+          },
         })),
 
       stiansGame: makeInitialStiansGame(),
