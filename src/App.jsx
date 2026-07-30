@@ -2,7 +2,7 @@ import { useAppStore } from "./store/useAppStore";
 import AppShell from "./components/AppShell";
 import Dashboard from "./modules/Dashboard";
 import SpinWheel from "./modules/SpinWheel";
-import Jeopardy from "./modules/Jeopardy";
+import QuizArena from "./modules/quiz/QuizArena";
 import Timer from "./modules/Timer";
 import ClassList from "./modules/ClassList";
 import NearestThousand from "./modules/NearestThousand";
@@ -11,7 +11,7 @@ import DiceRoller from "./modules/DiceRoller";
 const MODULE_COMPONENTS = {
   dashboard: Dashboard,
   spinwheel: SpinWheel,
-  jeopardy: Jeopardy,
+  quizarena: QuizArena,
   timer: Timer,
   classlist: ClassList,
   nearestthousand: NearestThousand,

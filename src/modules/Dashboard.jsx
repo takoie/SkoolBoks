@@ -18,10 +18,10 @@ const MODULES = [
     accent: "coral",
   },
   {
-    id: "jeopardy",
+    id: "quizarena",
     icon: Trophy,
     title: "Quiz-arena",
-    description: "Kategorier og poeng — Jeopardy-stil.",
+    description: "Lag og spill quiz — kategorier og poeng.",
     accent: "peach",
   },
   {
