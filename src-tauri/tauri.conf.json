@@ -13,12 +13,13 @@
     "windows": [
       {
         "title": "SkoolBox",
-        "width": 1280,
-        "height": 800,
+        "width": 1800,
+        "height": 1050,
         "minWidth": 1024,
         "minHeight": 768,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "decorations": false
       }
     ],
     "security": {

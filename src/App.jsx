@@ -1,5 +1,8 @@
+import { useEffect } from "react";
 import { useAppStore } from "./store/useAppStore";
 import AppShell from "./components/AppShell";
+import TitleBar from "./components/TitleBar";
+import ResizeHandles from "./components/ResizeHandles";
 import Dashboard from "./modules/Dashboard";
 import SpinWheel from "./modules/SpinWheel";
 import Jeopardy from "./modules/Jeopardy";
@@ -16,12 +19,21 @@ const MODULE_COMPONENTS = {
 
 function App() {
   const activeModule = useAppStore((s) => s.activeModule);
+  const theme = useAppStore((s) => s.settings.theme);
   const ActiveComponent = MODULE_COMPONENTS[activeModule] ?? Dashboard;
 
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme !== "light");
+  }, [theme]);
+
   return (
-    <AppShell>
-      <ActiveComponent />
-    </AppShell>
+    <div className="flex h-screen flex-col overflow-hidden">
+      <ResizeHandles />
+      <TitleBar />
+      <AppShell>
+        <ActiveComponent />
+      </AppShell>
+    </div>
   );
 }
 
