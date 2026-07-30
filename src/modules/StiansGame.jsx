@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus, Trash2, Check, Play } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { getGroupTotal } from "../lib/stiansGame";
+import { playSound } from "../lib/sound";
 
 function ScoreBoard({ groups, categories, scores }) {
   return (
@@ -406,6 +407,116 @@ function SetupPhase() {
   );
 }
 
+function WritingPhase() {
+  const soundEnabled = useAppStore((s) => s.settings.soundEnabled);
+  const currentLetter = useAppStore((s) => s.stiansGame.currentLetter);
+  const categories = useAppStore((s) => s.stiansGame.categories);
+  const groups = useAppStore((s) => s.stiansGame.groups);
+  const timerSeconds = useAppStore((s) => s.stiansGame.timerSeconds);
+  const stopStiansWriting = useAppStore((s) => s.stopStiansWriting);
+
+  const [remaining, setRemaining] = useState(timerSeconds);
+  const [running, setRunning] = useState(false);
+  const intervalRef = useRef(null);
+  const stoppedRef = useRef(false);
+
+  useEffect(() => {
+    setRemaining(timerSeconds);
+    setRunning(false);
+    stoppedRef.current = false;
+  }, [timerSeconds]);
+
+  useEffect(() => {
+    if (!running) return undefined;
+    intervalRef.current = setInterval(() => {
+      setRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(intervalRef.current);
+          setRunning(false);
+          playSound("ding", soundEnabled);
+          if (!stoppedRef.current) {
+            stoppedRef.current = true;
+            stopStiansWriting(null);
+          }
+          return 0;
+        }
+        if (prev <= 4) playSound("tick", soundEnabled);
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(intervalRef.current);
+  }, [running, soundEnabled, stopStiansWriting]);
+
+  function handleShout(groupId) {
+    if (stoppedRef.current) return;
+    stoppedRef.current = true;
+    stopStiansWriting(groupId);
+  }
+
+  function handleManualStop() {
+    if (stoppedRef.current) return;
+    stoppedRef.current = true;
+    stopStiansWriting(null);
+  }
+
+  const mm = Math.floor(remaining / 60).toString().padStart(2, "0");
+  const ss = (remaining % 60).toString().padStart(2, "0");
+
+  return (
+    <div className="mx-auto max-w-3xl text-center">
+      <div className="mb-6 flex min-h-[160px] w-full items-center justify-center rounded-xl2 border-2 border-ink/10 bg-surface shadow-clay">
+        <span className="font-heading text-7xl font-bold text-primary">
+          {currentLetter}
+        </span>
+      </div>
+
+      <p className="mb-2 font-body text-lg text-ink/70">
+        Kategorier: {categories.join(", ")}
+      </p>
+
+      <div
+        className="mb-6 font-heading text-5xl font-bold text-ink"
+        style={{ fontVariantNumeric: "tabular-nums" }}
+      >
+        {mm}:{ss}
+      </div>
+
+      <div className="mb-8 flex items-center justify-center gap-4">
+        <button
+          type="button"
+          onClick={() => setRunning((r) => !r)}
+          className="min-h-touch cursor-pointer rounded-xl2 bg-primary px-6 py-3 font-heading text-lg font-semibold text-white transition-colors hover:bg-primary-hover"
+        >
+          {running ? "Pause" : "Start tid"}
+        </button>
+        <button
+          type="button"
+          onClick={handleManualStop}
+          className="min-h-touch cursor-pointer rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-colors hover:bg-ink/5"
+        >
+          Stopp (uten lag)
+        </button>
+      </div>
+
+      <p className="mb-3 font-heading text-lg font-semibold text-ink">
+        Gruppa som er ferdig roper "Stians game!":
+      </p>
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        {groups.map((g) => (
+          <button
+            key={g.id}
+            type="button"
+            onClick={() => handleShout(g.id)}
+            className="min-h-touch cursor-pointer rounded-xl2 border-2 border-accent-coral/40 bg-accent-coral/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-colors hover:bg-accent-coral/20"
+          >
+            {g.name} ropte!
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function StiansGame() {
   const phase = useAppStore((s) => s.stiansGame.phase);
   const groups = useAppStore((s) => s.stiansGame.groups);
@@ -421,7 +532,8 @@ function StiansGame() {
       </h2>
       <ScoreBoard groups={groups} categories={categories} scores={scores} />
       {phase === "idle" && <IdlePhase />}
-      {(phase === "writing" || phase === "reviewing" || phase === "ended") && (
+      {phase === "writing" && <WritingPhase />}
+      {(phase === "reviewing" || phase === "ended") && (
         <p className="text-center text-lg text-ink/70">
           Fase "{phase}" bygges i neste steg.
         </p>
