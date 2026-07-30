@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Trash2, Check, Play } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { getGroupTotal } from "../lib/stiansGame";
@@ -9,18 +9,25 @@ function ScoreBoard({ groups, categories, scores }) {
       <table className="w-full border-collapse overflow-hidden rounded-xl2 border-2 border-ink/10 shadow-clay">
         <thead>
           <tr className="bg-primary/10">
-            <th className="border-2 border-ink/10 px-4 py-3 text-left font-heading text-lg text-ink">
+            <th
+              scope="col"
+              className="border-2 border-ink/10 px-4 py-3 text-left font-heading text-lg text-ink"
+            >
               Gruppe
             </th>
             {categories.map((cat) => (
               <th
                 key={cat}
+                scope="col"
                 className="border-2 border-ink/10 px-4 py-3 text-left font-heading text-base text-ink"
               >
                 {cat}
               </th>
             ))}
-            <th className="border-2 border-ink/10 bg-accent-lime/30 px-4 py-3 text-left font-heading text-lg text-ink">
+            <th
+              scope="col"
+              className="border-2 border-ink/10 bg-accent-lime/30 px-4 py-3 text-left font-heading text-lg text-ink"
+            >
               TOTAL
             </th>
           </tr>
@@ -53,6 +60,26 @@ function ScoreBoard({ groups, categories, scores }) {
   );
 }
 
+function ClampedNumberInput({ value, onCommit, className, ...inputProps }) {
+  const [draft, setDraft] = useState(String(value));
+
+  useEffect(() => {
+    setDraft(String(value));
+  }, [value]);
+
+  return (
+    <input
+      type="number"
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={() => onCommit(draft)}
+      onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+      className={className}
+      {...inputProps}
+    />
+  );
+}
+
 function IdlePhase() {
   const usedLetters = useAppStore((s) => s.stiansGame.usedLetters);
   const currentLetter = useAppStore((s) => s.stiansGame.currentLetter);
@@ -73,9 +100,19 @@ function IdlePhase() {
 
   const [manualDraft, setManualDraft] = useState("");
 
+  function handleManualLetter() {
+    if (!manualDraft.trim()) return;
+    setStiansManualLetter(manualDraft);
+    setManualDraft("");
+  }
+
   return (
     <div className="mx-auto max-w-3xl text-center">
-      <div className="mb-8 flex min-h-[180px] w-full items-center justify-center rounded-xl2 border-2 border-ink/10 bg-surface shadow-clay">
+      <div
+        role="status"
+        aria-live="polite"
+        className="mb-8 flex min-h-[180px] w-full items-center justify-center rounded-xl2 border-2 border-ink/10 bg-surface shadow-clay"
+      >
         <span className="font-heading text-8xl font-bold text-primary">
           {currentLetter ?? "?"}
         </span>
@@ -104,14 +141,12 @@ function IdlePhase() {
             maxLength={1}
             value={manualDraft}
             onChange={(e) => setManualDraft(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleManualLetter()}
             className="min-h-touch w-14 rounded-xl2 border-2 border-ink/10 bg-surface px-2 py-2 text-center font-body text-lg uppercase text-ink"
           />
           <button
             type="button"
-            onClick={() => {
-              setStiansManualLetter(manualDraft);
-              setManualDraft("");
-            }}
+            onClick={handleManualLetter}
             disabled={!manualDraft.trim()}
             className="min-h-touch cursor-pointer rounded-xl2 border-2 border-ink/10 px-4 py-2 font-heading font-semibold text-ink transition-colors hover:bg-ink/5 disabled:cursor-not-allowed disabled:opacity-40"
           >
@@ -123,22 +158,20 @@ function IdlePhase() {
       <div className="mb-8 flex flex-wrap items-center justify-center gap-6 rounded-xl2 border-2 border-ink/10 bg-surface p-4 shadow-clay">
         <label className="flex items-center gap-2 font-body text-lg text-ink">
           Poeng/runde:
-          <input
-            type="number"
+          <ClampedNumberInput
             min={1}
             value={pointsPerRound}
-            onChange={(e) => setStiansPointsPerRound(e.target.value)}
+            onCommit={setStiansPointsPerRound}
             className="min-h-touch w-16 rounded-xl2 border-2 border-ink/10 bg-surface px-2 py-2 text-center font-body text-lg text-ink"
           />
         </label>
         <label className="flex items-center gap-2 font-body text-lg text-ink">
           Sekunder:
-          <input
-            type="number"
+          <ClampedNumberInput
             min={5}
             max={600}
             value={timerSeconds}
-            onChange={(e) => setStiansTimerSeconds(e.target.value)}
+            onCommit={setStiansTimerSeconds}
             className="min-h-touch w-20 rounded-xl2 border-2 border-ink/10 bg-surface px-2 py-2 text-center font-body text-lg text-ink"
           />
         </label>
@@ -154,11 +187,10 @@ function IdlePhase() {
         {bonusEnabled && (
           <label className="flex items-center gap-2 font-body text-lg text-ink">
             Bonuspoeng:
-            <input
-              type="number"
+            <ClampedNumberInput
               min={1}
               value={bonusPoints}
-              onChange={(e) => setStiansBonusPoints(e.target.value)}
+              onCommit={setStiansBonusPoints}
               className="min-h-touch w-16 rounded-xl2 border-2 border-ink/10 bg-surface px-2 py-2 text-center font-body text-lg text-ink"
             />
           </label>

@@ -208,7 +208,7 @@ export const useAppStore = create(
       setStiansManualLetter: (letter) =>
         set((s) => {
           const upper = letter.trim().toLocaleUpperCase("no");
-          if (!upper) return {};
+          if (!NORWEGIAN_ALPHABET.includes(upper)) return {};
           const usedLetters = s.stiansGame.usedLetters.includes(upper)
             ? s.stiansGame.usedLetters
             : [...s.stiansGame.usedLetters, upper];
