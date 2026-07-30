@@ -1,6 +1,193 @@
 import { useState } from "react";
 import { Plus, Trash2, Check, Play } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
+import { getGroupTotal } from "../lib/stiansGame";
+
+function ScoreBoard({ groups, categories, scores }) {
+  return (
+    <div className="mb-8 overflow-x-auto">
+      <table className="w-full border-collapse overflow-hidden rounded-xl2 border-2 border-ink/10 shadow-clay">
+        <thead>
+          <tr className="bg-primary/10">
+            <th className="border-2 border-ink/10 px-4 py-3 text-left font-heading text-lg text-ink">
+              Gruppe
+            </th>
+            {categories.map((cat) => (
+              <th
+                key={cat}
+                className="border-2 border-ink/10 px-4 py-3 text-left font-heading text-base text-ink"
+              >
+                {cat}
+              </th>
+            ))}
+            <th className="border-2 border-ink/10 bg-accent-lime/30 px-4 py-3 text-left font-heading text-lg text-ink">
+              TOTAL
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {groups.map((g) => {
+            const entry = scores[g.id] ?? { byCategory: {}, bonus: 0 };
+            return (
+              <tr key={g.id} className="bg-surface">
+                <td className="border-2 border-ink/10 px-4 py-3 font-heading font-semibold text-ink">
+                  {g.name}
+                </td>
+                {categories.map((cat) => (
+                  <td
+                    key={cat}
+                    className="border-2 border-ink/10 px-4 py-3 font-body text-lg text-ink"
+                  >
+                    {entry.byCategory[cat] ?? 0}
+                  </td>
+                ))}
+                <td className="border-2 border-ink/10 bg-accent-lime/10 px-4 py-3 font-heading text-lg font-bold text-ink">
+                  {getGroupTotal(scores, g.id)}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function IdlePhase() {
+  const usedLetters = useAppStore((s) => s.stiansGame.usedLetters);
+  const currentLetter = useAppStore((s) => s.stiansGame.currentLetter);
+  const pointsPerRound = useAppStore((s) => s.stiansGame.pointsPerRound);
+  const bonusEnabled = useAppStore((s) => s.stiansGame.bonusEnabled);
+  const bonusPoints = useAppStore((s) => s.stiansGame.bonusPoints);
+  const timerSeconds = useAppStore((s) => s.stiansGame.timerSeconds);
+
+  const drawStiansLetter = useAppStore((s) => s.drawStiansLetter);
+  const rerollStiansLetter = useAppStore((s) => s.rerollStiansLetter);
+  const setStiansManualLetter = useAppStore((s) => s.setStiansManualLetter);
+  const setStiansPointsPerRound = useAppStore((s) => s.setStiansPointsPerRound);
+  const setStiansBonusEnabled = useAppStore((s) => s.setStiansBonusEnabled);
+  const setStiansBonusPoints = useAppStore((s) => s.setStiansBonusPoints);
+  const setStiansTimerSeconds = useAppStore((s) => s.setStiansTimerSeconds);
+  const startStiansWriting = useAppStore((s) => s.startStiansWriting);
+  const endStiansGame = useAppStore((s) => s.endStiansGame);
+
+  const [manualDraft, setManualDraft] = useState("");
+
+  return (
+    <div className="mx-auto max-w-3xl text-center">
+      <div className="mb-8 flex min-h-[180px] w-full items-center justify-center rounded-xl2 border-2 border-ink/10 bg-surface shadow-clay">
+        <span className="font-heading text-8xl font-bold text-primary">
+          {currentLetter ?? "?"}
+        </span>
+      </div>
+
+      <div className="mb-6 flex flex-wrap items-center justify-center gap-3">
+        <button
+          type="button"
+          onClick={drawStiansLetter}
+          className="min-h-touch cursor-pointer rounded-xl2 bg-primary px-6 py-3 font-heading text-lg font-semibold text-white transition-colors hover:bg-primary-hover"
+        >
+          Trekk bokstav
+        </button>
+        <button
+          type="button"
+          onClick={rerollStiansLetter}
+          disabled={!currentLetter}
+          className="min-h-touch cursor-pointer rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-colors hover:bg-ink/5 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Trekk på nytt
+        </button>
+        <label className="flex items-center gap-2 font-body text-lg text-ink">
+          Egen bokstav:
+          <input
+            type="text"
+            maxLength={1}
+            value={manualDraft}
+            onChange={(e) => setManualDraft(e.target.value)}
+            className="min-h-touch w-14 rounded-xl2 border-2 border-ink/10 bg-surface px-2 py-2 text-center font-body text-lg uppercase text-ink"
+          />
+          <button
+            type="button"
+            onClick={() => {
+              setStiansManualLetter(manualDraft);
+              setManualDraft("");
+            }}
+            disabled={!manualDraft.trim()}
+            className="min-h-touch cursor-pointer rounded-xl2 border-2 border-ink/10 px-4 py-2 font-heading font-semibold text-ink transition-colors hover:bg-ink/5 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Bruk
+          </button>
+        </label>
+      </div>
+
+      <div className="mb-8 flex flex-wrap items-center justify-center gap-6 rounded-xl2 border-2 border-ink/10 bg-surface p-4 shadow-clay">
+        <label className="flex items-center gap-2 font-body text-lg text-ink">
+          Poeng/runde:
+          <input
+            type="number"
+            min={1}
+            value={pointsPerRound}
+            onChange={(e) => setStiansPointsPerRound(e.target.value)}
+            className="min-h-touch w-16 rounded-xl2 border-2 border-ink/10 bg-surface px-2 py-2 text-center font-body text-lg text-ink"
+          />
+        </label>
+        <label className="flex items-center gap-2 font-body text-lg text-ink">
+          Sekunder:
+          <input
+            type="number"
+            min={5}
+            max={600}
+            value={timerSeconds}
+            onChange={(e) => setStiansTimerSeconds(e.target.value)}
+            className="min-h-touch w-20 rounded-xl2 border-2 border-ink/10 bg-surface px-2 py-2 text-center font-body text-lg text-ink"
+          />
+        </label>
+        <label className="flex cursor-pointer items-center gap-2 font-body text-lg text-ink">
+          <input
+            type="checkbox"
+            checked={bonusEnabled}
+            onChange={(e) => setStiansBonusEnabled(e.target.checked)}
+            className="h-6 w-6 cursor-pointer accent-primary"
+          />
+          Bonus for først ferdig
+        </label>
+        {bonusEnabled && (
+          <label className="flex items-center gap-2 font-body text-lg text-ink">
+            Bonuspoeng:
+            <input
+              type="number"
+              min={1}
+              value={bonusPoints}
+              onChange={(e) => setStiansBonusPoints(e.target.value)}
+              className="min-h-touch w-16 rounded-xl2 border-2 border-ink/10 bg-surface px-2 py-2 text-center font-body text-lg text-ink"
+            />
+          </label>
+        )}
+      </div>
+
+      <div className="flex flex-wrap items-center justify-center gap-4">
+        <button
+          type="button"
+          onClick={startStiansWriting}
+          disabled={!currentLetter}
+          className="min-h-touch cursor-pointer rounded-xl2 bg-primary px-8 py-3 font-heading text-xl font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Start skriving
+        </button>
+        <button
+          type="button"
+          onClick={endStiansGame}
+          className="min-h-touch cursor-pointer rounded-xl2 border-2 border-destructive/30 px-6 py-3 font-heading text-lg font-semibold text-destructive transition-colors hover:bg-destructive/10"
+        >
+          Avslutt spill
+        </button>
+      </div>
+      <p className="mt-3 text-base text-ink/60">
+        Brukte bokstaver: {usedLetters.join(", ") || "ingen ennå"}
+      </p>
+    </div>
+  );
+}
 
 function SetupPhase() {
   const groups = useAppStore((s) => s.stiansGame.groups);
@@ -189,14 +376,24 @@ function SetupPhase() {
 
 function StiansGame() {
   const phase = useAppStore((s) => s.stiansGame.phase);
+  const groups = useAppStore((s) => s.stiansGame.groups);
+  const categories = useAppStore((s) => s.stiansGame.categories);
+  const scores = useAppStore((s) => s.stiansGame.scores);
 
   if (phase === "setup") return <SetupPhase />;
 
   return (
-    <div className="mx-auto max-w-3xl text-center">
-      <p className="text-lg text-ink/70">
-        Fase "{phase}" bygges i neste steg.
-      </p>
+    <div className="mx-auto max-w-5xl">
+      <h2 className="mb-6 text-center font-heading text-3xl font-semibold text-ink">
+        Stians game
+      </h2>
+      <ScoreBoard groups={groups} categories={categories} scores={scores} />
+      {phase === "idle" && <IdlePhase />}
+      {(phase === "writing" || phase === "reviewing" || phase === "ended") && (
+        <p className="text-center text-lg text-ink/70">
+          Fase "{phase}" bygges i neste steg.
+        </p>
+      )}
     </div>
   );
 }
