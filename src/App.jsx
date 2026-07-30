@@ -27,13 +27,13 @@ function App() {
   }, [theme]);
 
   return (
-    <>
+    <div className="flex h-screen flex-col overflow-hidden">
       <ResizeHandles />
       <TitleBar />
       <AppShell>
         <ActiveComponent />
       </AppShell>
-    </>
+    </div>
   );
 }
 

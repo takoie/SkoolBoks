@@ -11,7 +11,7 @@ function AppShell({ children }) {
   const setSettings = useAppStore((s) => s.setSettings);
 
   return (
-    <div className="flex min-h-screen flex-col bg-canvas">
+    <div className="flex min-h-0 flex-1 flex-col bg-canvas">
       <header className="flex min-h-touch items-center justify-between gap-4 border-b-2 border-ink/10 bg-surface px-6 py-3">
         <div className="flex items-center gap-4">
           {activeModule !== "dashboard" && (
