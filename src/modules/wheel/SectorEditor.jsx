@@ -1,0 +1,125 @@
+import { useRef, useState } from "react";
+import { Plus, Trash2, Upload } from "lucide-react";
+
+function SectorEditor({ sectors, onChange }) {
+  const [importOpen, setImportOpen] = useState(false);
+  const [importText, setImportText] = useState("");
+  const inputRefs = useRef({});
+
+  function updateLabel(id, label) {
+    onChange(sectors.map((s) => (s.id === id ? { ...s, label } : s)));
+  }
+
+  function addRow(afterId) {
+    const newSector = { id: crypto.randomUUID(), label: "" };
+    if (!afterId) {
+      onChange([...sectors, newSector]);
+    } else {
+      const idx = sectors.findIndex((s) => s.id === afterId);
+      const next = [...sectors];
+      next.splice(idx + 1, 0, newSector);
+      onChange(next);
+    }
+    requestAnimationFrame(() => inputRefs.current[newSector.id]?.focus());
+  }
+
+  function removeRow(id) {
+    onChange(sectors.filter((s) => s.id !== id));
+  }
+
+  function handleKeyDown(e, id) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addRow(id);
+    }
+  }
+
+  function applyImport() {
+    const labels = importText
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
+    if (labels.length > 0) {
+      onChange(labels.map((label) => ({ id: crypto.randomUUID(), label })));
+    }
+    setImportText("");
+    setImportOpen(false);
+  }
+
+  return (
+    <div>
+      <div className="mb-3 flex flex-col gap-2">
+        {sectors.map((sector) => (
+          <div key={sector.id} className="flex items-center gap-2">
+            <input
+              ref={(el) => (inputRefs.current[sector.id] = el)}
+              type="text"
+              value={sector.label}
+              onChange={(e) => updateLabel(sector.id, e.target.value)}
+              onKeyDown={(e) => handleKeyDown(e, sector.id)}
+              placeholder="Sektortekst"
+              className="min-h-touch flex-1 rounded-xl2 border-2 border-ink/10 bg-surface px-4 py-2 font-body text-base text-ink"
+            />
+            <button
+              type="button"
+              onClick={() => removeRow(sector.id)}
+              aria-label="Fjern sektor"
+              className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-ink/50 transition-colors hover:bg-destructive/10 hover:text-destructive"
+            >
+              <Trash2 size={20} aria-hidden="true" />
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => addRow(null)}
+          className="flex min-h-touch cursor-pointer items-center gap-2 rounded-xl2 border-2 border-ink/10 px-4 py-2 font-heading font-semibold text-ink transition-colors hover:bg-ink/5"
+        >
+          <Plus size={18} aria-hidden="true" />
+          Legg til sektor
+        </button>
+        <button
+          type="button"
+          onClick={() => setImportOpen((v) => !v)}
+          className="flex min-h-touch cursor-pointer items-center gap-2 rounded-xl2 border-2 border-ink/10 px-4 py-2 font-heading font-semibold text-ink transition-colors hover:bg-ink/5"
+        >
+          <Upload size={18} aria-hidden="true" />
+          Importer fra tekst
+        </button>
+      </div>
+
+      {importOpen && (
+        <div className="mt-3 flex flex-col gap-2">
+          <textarea
+            value={importText}
+            onChange={(e) => setImportText(e.target.value)}
+            placeholder={"Én sektor per linje"}
+            rows={6}
+            className="w-full rounded-xl2 border-2 border-ink/10 bg-surface p-3 font-body text-base text-ink"
+          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={applyImport}
+              className="min-h-touch cursor-pointer rounded-xl2 bg-primary px-4 py-2 font-heading font-semibold text-white transition-colors hover:bg-primary-hover"
+            >
+              Erstatt sektorer
+            </button>
+            <button
+              type="button"
+              onClick={() => setImportOpen(false)}
+              className="min-h-touch cursor-pointer rounded-xl2 border-2 border-ink/10 px-4 py-2 font-heading font-semibold text-ink transition-colors hover:bg-ink/5"
+            >
+              Avbryt
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default SectorEditor;
