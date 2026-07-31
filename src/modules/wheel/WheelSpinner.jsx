@@ -3,7 +3,7 @@ import { ArrowLeft, PanelRightClose, PanelRightOpen, RotateCcw, Undo2 } from "lu
 import { useAppStore } from "../../store/useAppStore";
 import { playSound } from "../../lib/sound";
 import { fireConfetti } from "../../lib/confetti";
-import { pickWinnerIndex, computeSpinRotation, sectorColor } from "../../lib/wheelSpin";
+import { pickWinnerIndex, computeSpinRotation, randomLandingOffset, sectorColor } from "../../lib/wheelSpin";
 import SectorEditor from "./SectorEditor";
 
 const WHEEL_SIZE = 360;
@@ -103,7 +103,14 @@ function WheelSpinner({ wheelId, onBack }) {
       ? rotation
       : ((Date.now() - idleStartRef.current) / 24000) * 360;
     const winnerIndex = pickWinnerIndex(activeSectors.length);
-    const targetRotation = computeSpinRotation(startRotation, winnerIndex, activeSectors.length);
+    const landingOffset = randomLandingOffset(activeSectors.length);
+    const targetRotation = computeSpinRotation(
+      startRotation,
+      winnerIndex,
+      activeSectors.length,
+      6,
+      landingOffset
+    );
     const deltaDeg = targetRotation - startRotation;
     const duration = 4000;
 
@@ -194,108 +201,112 @@ function WheelSpinner({ wheelId, onBack }) {
           </button>
         </div>
 
-        <div
-          className="relative mb-8"
-          style={{
-            width: showEditor
-              ? "clamp(300px, min(48vw, 58vh), 460px)"
-              : "clamp(340px, min(80vw, 76vh), 760px)",
-            aspectRatio: "1 / 1",
-          }}
-        >
+        <div className="flex w-full flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-center">
+          <div className="order-2 flex flex-col items-center gap-6 text-center lg:order-1 lg:items-start lg:text-left">
+            <div className="flex min-h-[64px] items-center justify-center lg:justify-start">
+              <span className="font-heading text-2xl font-bold text-primary">
+                {activeSectors.length < 2
+                  ? "Legg til minst to sektorer med tekst for å spinne"
+                  : winner
+                    ? winner.label
+                    : spinning
+                      ? "Snurrer…"
+                      : "Klar for å spinne?"}
+              </span>
+            </div>
+
+            <div className="flex flex-col items-center gap-4 lg:items-start">
+              <button
+                type="button"
+                onClick={spin}
+                disabled={spinning || activeSectors.length < 2}
+                className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 bg-primary px-8 py-3 font-heading text-xl font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
+              >
+                {spinning ? "Spinner…" : "Spinn hjulet"}
+              </button>
+              <button
+                type="button"
+                onClick={handleUndo}
+                disabled={spinning || removedIds.length === 0}
+                className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-all duration-150 hover:bg-ink/5 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
+              >
+                <Undo2 size={22} aria-hidden="true" />
+                Angre
+              </button>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-all duration-150 hover:bg-ink/5 active:scale-[0.97]"
+              >
+                <RotateCcw size={22} aria-hidden="true" />
+                Nullstill
+              </button>
+            </div>
+
+            <label className="flex cursor-pointer items-center gap-3 font-body text-lg text-ink">
+              <input
+                type="checkbox"
+                checked={wheel.removeAfterSpin}
+                onChange={(e) => setWheelRemoveAfterSpin(wheelId, e.target.checked)}
+                className="h-6 w-6 cursor-pointer accent-primary"
+              />
+              Fjern vinner etter spinn
+            </label>
+          </div>
+
           <div
-            className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2"
+            className="relative order-1 shrink-0 lg:order-2"
             style={{
-              width: 0,
-              height: 0,
-              borderLeft: "14px solid transparent",
-              borderRight: "14px solid transparent",
-              borderTop: "22px solid var(--color-ink)",
-            }}
-            aria-hidden="true"
-          />
-          <svg
-            width="100%"
-            height="100%"
-            viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`}
-            className={!hasSpunOnce && !spinning ? "animate-idle-spin" : ""}
-            style={{
-              transform: `rotate(${rotation}deg)`,
+              width: showEditor
+                ? "clamp(300px, min(48vw, 58vh), 460px)"
+                : "clamp(320px, min(66vw, 66vh), 620px)",
+              aspectRatio: "1 / 1",
             }}
           >
-            {activeSectors.map((sector, i) => (
-              <path key={sector.id} d={sectorPath(i, activeSectors.length)} fill={sectorColor(i)} stroke="var(--color-surface)" strokeWidth={2} />
-            ))}
-            {activeSectors.map((sector, i) => {
-              const label = truncateLabel(sector.label);
-              return (
-                <text
-                  key={`${sector.id}-label`}
-                  transform={sectorLabelTransform(i, activeSectors.length)}
-                  x={RADIUS + LABEL_END_RADIUS}
-                  y={RADIUS}
-                  dy="0.35em"
-                  textAnchor="end"
-                  fontSize={sectorLabelFontSize(label)}
-                  fill="var(--color-accent-ink)"
-                  className="pointer-events-none select-none font-heading font-semibold"
-                >
-                  {label}
-                </text>
-              );
-            })}
-          </svg>
+            <div
+              className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2"
+              style={{
+                width: 0,
+                height: 0,
+                borderLeft: "14px solid transparent",
+                borderRight: "14px solid transparent",
+                borderTop: "22px solid var(--color-ink)",
+              }}
+              aria-hidden="true"
+            />
+            <svg
+              width="100%"
+              height="100%"
+              viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`}
+              className={!hasSpunOnce && !spinning ? "animate-idle-spin" : ""}
+              style={{
+                transform: `rotate(${rotation}deg)`,
+              }}
+            >
+              {activeSectors.map((sector, i) => (
+                <path key={sector.id} d={sectorPath(i, activeSectors.length)} fill={sectorColor(i)} stroke="var(--color-surface)" strokeWidth={2} />
+              ))}
+              {activeSectors.map((sector, i) => {
+                const label = truncateLabel(sector.label);
+                return (
+                  <text
+                    key={`${sector.id}-label`}
+                    transform={sectorLabelTransform(i, activeSectors.length)}
+                    x={RADIUS + LABEL_END_RADIUS}
+                    y={RADIUS}
+                    dy="0.35em"
+                    textAnchor="end"
+                    fontSize={sectorLabelFontSize(label)}
+                    fill="var(--color-accent-ink)"
+                    className="pointer-events-none select-none font-heading font-semibold"
+                  >
+                    {label}
+                  </text>
+                );
+              })}
+            </svg>
+          </div>
         </div>
-
-        <div className="mb-6 flex min-h-[64px] items-center justify-center">
-          <span className="font-heading text-2xl font-bold text-primary">
-            {activeSectors.length < 2
-              ? "Legg til minst to sektorer med tekst for å spinne"
-              : winner
-                ? winner.label
-                : spinning
-                  ? "Snurrer…"
-                  : "Klar for å spinne?"}
-          </span>
-        </div>
-
-        <div className="mb-6 flex flex-wrap items-center justify-center gap-4">
-          <button
-            type="button"
-            onClick={spin}
-            disabled={spinning || activeSectors.length < 2}
-            className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 bg-primary px-8 py-3 font-heading text-xl font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
-          >
-            {spinning ? "Spinner…" : "Spinn hjulet"}
-          </button>
-          <button
-            type="button"
-            onClick={handleUndo}
-            disabled={spinning || removedIds.length === 0}
-            className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-all duration-150 hover:bg-ink/5 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
-          >
-            <Undo2 size={22} aria-hidden="true" />
-            Angre
-          </button>
-          <button
-            type="button"
-            onClick={handleReset}
-            className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-all duration-150 hover:bg-ink/5 active:scale-[0.97]"
-          >
-            <RotateCcw size={22} aria-hidden="true" />
-            Nullstill
-          </button>
-        </div>
-
-        <label className="flex cursor-pointer items-center gap-3 font-body text-lg text-ink">
-          <input
-            type="checkbox"
-            checked={wheel.removeAfterSpin}
-            onChange={(e) => setWheelRemoveAfterSpin(wheelId, e.target.checked)}
-            className="h-6 w-6 cursor-pointer accent-primary"
-          />
-          Fjern vinner etter spinn
-        </label>
       </div>
 
       {showEditor && (
