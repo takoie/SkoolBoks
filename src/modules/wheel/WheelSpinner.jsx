@@ -25,6 +25,21 @@ function sectorPath(index, total) {
   return `M ${RADIUS} ${RADIUS} L ${x1} ${y1} A ${RADIUS} ${RADIUS} 0 ${largeArc} 1 ${x2} ${y2} Z`;
 }
 
+const LABEL_RADIUS = RADIUS * 0.62;
+const LABEL_MAX_CHARS = 16;
+
+function truncateLabel(label) {
+  return label.length > LABEL_MAX_CHARS
+    ? `${label.slice(0, LABEL_MAX_CHARS - 1)}…`
+    : label;
+}
+
+function sectorLabelTransform(index, total) {
+  const sliceDeg = 360 / total;
+  const centerAngle = index * sliceDeg + sliceDeg / 2; // 0 = top, clockwise
+  return `rotate(${centerAngle - 90} ${RADIUS} ${RADIUS})`;
+}
+
 function WheelSpinner({ wheelId, onBack }) {
   const wheel = useAppStore((s) => s.wheels[wheelId]);
   const removedIds = useAppStore(
@@ -116,6 +131,20 @@ function WheelSpinner({ wheelId, onBack }) {
           >
             {activeSectors.map((sector, i) => (
               <path key={sector.id} d={sectorPath(i, activeSectors.length)} fill={sectorColor(i)} stroke="var(--color-surface)" strokeWidth={2} />
+            ))}
+            {activeSectors.map((sector, i) => (
+              <text
+                key={`${sector.id}-label`}
+                transform={sectorLabelTransform(i, activeSectors.length)}
+                x={RADIUS + LABEL_RADIUS}
+                y={RADIUS}
+                dy="0.35em"
+                textAnchor="end"
+                fill="var(--color-accent-ink)"
+                className="pointer-events-none select-none font-heading text-sm font-semibold"
+              >
+                {truncateLabel(sector.label)}
+              </text>
             ))}
           </svg>
         </div>
