@@ -10,6 +10,7 @@ import Timer from "./modules/Timer";
 import ClassList from "./modules/ClassList";
 import NearestThousand from "./modules/NearestThousand";
 import DiceRoller from "./modules/DiceRoller";
+import StiansGame from "./modules/StiansGame";
 
 const MODULE_COMPONENTS = {
   dashboard: Dashboard,
@@ -19,6 +20,7 @@ const MODULE_COMPONENTS = {
   classlist: ClassList,
   nearestthousand: NearestThousand,
   dice: DiceRoller,
+  stiansgame: StiansGame,
 };
 
 function App() {

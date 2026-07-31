@@ -1,8 +1,38 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { tauriStorage } from "./tauriStorage";
+import {
+  NORWEGIAN_ALPHABET,
+  pickLetter,
+  pickRerollLetter,
+  getCurrentReviewGroupId,
+  commitRound,
+} from "../lib/stiansGame";
 
 const DEFAULT_CLASS_ID = "default";
+
+function clampNumber(value, min, max, fallback) {
+  const parsed = Number(value);
+  const safe = Number.isFinite(parsed) ? parsed : fallback;
+  return Math.max(min, Math.min(max, safe));
+}
+
+function makeInitialStiansGame() {
+  return {
+    groups: [],
+    categories: [],
+    usedLetters: [],
+    currentLetter: null,
+    phase: "setup", // setup | idle | writing | reviewing | ended
+    pointsPerRound: 1,
+    bonusEnabled: false,
+    bonusPoints: 1,
+    timerSeconds: 60,
+    leadGroupId: null,
+    review: null, // { categoryIndex, groupOrder: string[], marks: {groupId: {category: bool}} }
+    scores: {}, // { groupId: { byCategory: {category: number}, bonus: number } }
+  };
+}
 
 export const useAppStore = create(
   persist(
@@ -99,6 +129,213 @@ export const useAppStore = create(
           delete quizzes[id];
           return { quizzes };
         }),
+
+      categoryBank: [],
+      addCategoryToBank: (name) =>
+        set((s) => {
+          const trimmed = name.trim();
+          if (!trimmed || s.categoryBank.includes(trimmed)) return {};
+          return { categoryBank: [...s.categoryBank, trimmed] };
+        }),
+      removeCategoryFromBank: (name) =>
+        set((s) => ({
+          categoryBank: s.categoryBank.filter((c) => c !== name),
+          stiansGame: {
+            ...s.stiansGame,
+            categories: s.stiansGame.categories.filter((c) => c !== name),
+          },
+        })),
+
+      stiansGame: makeInitialStiansGame(),
+
+      addStiansGroup: (name) =>
+        set((s) => {
+          const trimmed = name.trim();
+          if (!trimmed) return {};
+          return {
+            stiansGame: {
+              ...s.stiansGame,
+              groups: [
+                ...s.stiansGame.groups,
+                { id: crypto.randomUUID(), name: trimmed },
+              ],
+            },
+          };
+        }),
+      renameStiansGroup: (id, name) =>
+        set((s) => {
+          const trimmed = name.trim();
+          if (!trimmed) return {};
+          return {
+            stiansGame: {
+              ...s.stiansGame,
+              groups: s.stiansGame.groups.map((g) =>
+                g.id === id ? { ...g, name: trimmed } : g
+              ),
+            },
+          };
+        }),
+      removeStiansGroup: (id) =>
+        set((s) => {
+          const scores = { ...s.stiansGame.scores };
+          delete scores[id];
+          return {
+            stiansGame: {
+              ...s.stiansGame,
+              groups: s.stiansGame.groups.filter((g) => g.id !== id),
+              scores,
+            },
+          };
+        }),
+
+      setStiansCategories: (categories) =>
+        set((s) => ({
+          stiansGame: { ...s.stiansGame, categories: [...new Set(categories)] },
+        })),
+
+      startStiansGame: () =>
+        set((s) => ({ stiansGame: { ...s.stiansGame, phase: "idle" } })),
+
+      setStiansPointsPerRound: (n) =>
+        set((s) => ({
+          stiansGame: {
+            ...s.stiansGame,
+            pointsPerRound: clampNumber(n, 1, Infinity, 1),
+          },
+        })),
+      setStiansBonusEnabled: (enabled) =>
+        set((s) => ({
+          stiansGame: { ...s.stiansGame, bonusEnabled: enabled },
+        })),
+      setStiansBonusPoints: (n) =>
+        set((s) => ({
+          stiansGame: {
+            ...s.stiansGame,
+            bonusPoints: clampNumber(n, 1, Infinity, 1),
+          },
+        })),
+      setStiansTimerSeconds: (n) =>
+        set((s) => ({
+          stiansGame: {
+            ...s.stiansGame,
+            timerSeconds: clampNumber(n, 5, 600, 60),
+          },
+        })),
+
+      drawStiansLetter: () =>
+        set((s) => {
+          const allUsed =
+            s.stiansGame.usedLetters.length >= NORWEGIAN_ALPHABET.length;
+          const usedLetters = allUsed ? [] : s.stiansGame.usedLetters;
+          const letter = pickLetter(usedLetters);
+          return {
+            stiansGame: {
+              ...s.stiansGame,
+              currentLetter: letter,
+              usedLetters: [...usedLetters, letter],
+            },
+          };
+        }),
+      rerollStiansLetter: () =>
+        set((s) => {
+          const { usedLetters, currentLetter } = s.stiansGame;
+          const usedWithoutCurrent = usedLetters.filter(
+            (l) => l !== currentLetter
+          );
+          const letter = pickRerollLetter(usedWithoutCurrent, currentLetter);
+          return {
+            stiansGame: {
+              ...s.stiansGame,
+              currentLetter: letter,
+              usedLetters: [...usedWithoutCurrent, letter],
+            },
+          };
+        }),
+      setStiansManualLetter: (letter) =>
+        set((s) => {
+          const upper = letter.trim().toLocaleUpperCase("no");
+          if (!NORWEGIAN_ALPHABET.includes(upper)) return {};
+          const usedLetters = s.stiansGame.usedLetters.includes(upper)
+            ? s.stiansGame.usedLetters
+            : [...s.stiansGame.usedLetters, upper];
+          return {
+            stiansGame: { ...s.stiansGame, currentLetter: upper, usedLetters },
+          };
+        }),
+
+      startStiansWriting: () =>
+        set((s) => ({
+          stiansGame: { ...s.stiansGame, phase: "writing", leadGroupId: null },
+        })),
+
+      stopStiansWriting: (groupId = null) =>
+        set((s) => {
+          if (s.stiansGame.groups.length === 0 || s.stiansGame.categories.length === 0)
+            return {};
+          const allGroupIds = s.stiansGame.groups.map((g) => g.id);
+          const order = groupId
+            ? [groupId, ...allGroupIds.filter((id) => id !== groupId)]
+            : allGroupIds;
+          return {
+            stiansGame: {
+              ...s.stiansGame,
+              phase: "reviewing",
+              leadGroupId: groupId,
+              review: { categoryIndex: 0, groupOrder: order, marks: {} },
+            },
+          };
+        }),
+
+      markStiansApproval: (approved) =>
+        set((s) => {
+          const g = s.stiansGame;
+          if (!g.review) return {};
+          const category = g.categories[g.review.categoryIndex];
+          const currentGroupId = getCurrentReviewGroupId(g);
+          if (!currentGroupId) return {};
+          const marks = {
+            ...g.review.marks,
+            [currentGroupId]: {
+              ...g.review.marks[currentGroupId],
+              [category]: approved,
+            },
+          };
+          const allMarked = g.review.groupOrder.every(
+            (id) => marks[id]?.[category] !== undefined
+          );
+          if (!allMarked) {
+            return { stiansGame: { ...g, review: { ...g.review, marks } } };
+          }
+          const nextCategoryIndex = g.review.categoryIndex + 1;
+          if (nextCategoryIndex < g.categories.length) {
+            return {
+              stiansGame: {
+                ...g,
+                review: { ...g.review, marks, categoryIndex: nextCategoryIndex },
+              },
+            };
+          }
+          return {
+            stiansGame: commitRound({ ...g, review: { ...g.review, marks } }),
+          };
+        }),
+
+      endStiansGame: () =>
+        set((s) => ({ stiansGame: { ...s.stiansGame, phase: "ended" } })),
+      resetStiansGameScores: () =>
+        set((s) => ({
+          stiansGame: {
+            ...s.stiansGame,
+            scores: {},
+            usedLetters: [],
+            currentLetter: null,
+            phase: "idle",
+            review: null,
+            leadGroupId: null,
+          },
+        })),
+      resetStiansGameFull: () =>
+        set(() => ({ stiansGame: makeInitialStiansGame() })),
     }),
     {
       name: "skoolbox-store",
@@ -109,6 +346,8 @@ export const useAppStore = create(
         drawnStudents: s.drawnStudents,
         settings: s.settings,
         quizzes: s.quizzes,
+        categoryBank: s.categoryBank,
+        stiansGame: s.stiansGame,
       }),
     }
   )

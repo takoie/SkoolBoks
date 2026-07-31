@@ -5,6 +5,7 @@ import {
   Users,
   Hash,
   Dice5,
+  Puzzle,
 } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import ModuleCard from "../components/ModuleCard";
@@ -51,6 +52,13 @@ const MODULES = [
     title: "Terningkast",
     description: "Kast en eller flere terninger.",
     accent: "coral",
+  },
+  {
+    id: "stiansgame",
+    icon: Puzzle,
+    title: "Stians game",
+    description: "Bokstav, kategorier og poeng — lagspill i runder.",
+    accent: "secondary",
   },
 ];
 
