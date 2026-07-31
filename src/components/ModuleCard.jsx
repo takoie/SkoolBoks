@@ -1,4 +1,4 @@
-function ModuleCard({ icon: Icon, title, description, accent = "primary", onClick }) {
+function ModuleCard({ icon: Icon, image, title, description, accent = "primary", onClick }) {
   const accentClasses = {
     primary: "bg-primary text-white",
     secondary: "bg-secondary text-white",
@@ -13,11 +13,20 @@ function ModuleCard({ icon: Icon, title, description, accent = "primary", onClic
       onClick={onClick}
       className="group flex min-h-[180px] cursor-pointer flex-col items-start gap-4 rounded-xl2 border-2 border-ink/10 bg-surface p-6 text-left shadow-clay transition-all duration-200 ease-out hover:-translate-y-1 hover:border-primary/40 focus-visible:-translate-y-1 active:translate-y-0 active:scale-[0.98] active:duration-75"
     >
-      <span
-        className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl ${accentClasses[accent]}`}
-      >
-        <Icon size={28} strokeWidth={2} aria-hidden="true" />
-      </span>
+      {image ? (
+        <img
+          src={image}
+          alt=""
+          aria-hidden="true"
+          className="h-14 w-14 rounded-2xl object-cover"
+        />
+      ) : (
+        <span
+          className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl ${accentClasses[accent]}`}
+        >
+          <Icon size={28} strokeWidth={2} aria-hidden="true" />
+        </span>
+      )}
       <span>
         <span className="block font-heading text-2xl font-semibold text-ink">
           {title}

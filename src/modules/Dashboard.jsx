@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import ModuleCard from "../components/ModuleCard";
+import stianIcon from "../img/stian.png";
 
 const MODULES = [
   {
@@ -57,6 +58,7 @@ const MODULES = [
   {
     id: "stiansgame",
     icon: Puzzle,
+    image: stianIcon,
     title: "Stians game",
     description: "Bokstav, kategorier og poeng — lagspill i runder.",
     accent: "secondary",
@@ -103,6 +105,7 @@ function Dashboard() {
           <ModuleCard
             key={m.id}
             icon={m.icon}
+            image={m.image}
             title={m.title}
             description={m.description}
             accent={m.accent}

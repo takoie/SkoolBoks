@@ -10,6 +10,7 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 - Stians game: Scoreboard highlights the category column currently under review and previews pending points live as "forrige+endring" (e.g. "0+1") before the round is committed.
 
 ### Changed
+- Synced pending workspace edits across spin wheel, Stians game, timer, dice, nearest-thousand modules, and shared UI/store code.
 - Stians game: The manual letter input is now masked (shown as dots) so the letter stays hidden until "Bruk" reveals it in the main display.
 - Updated changelog to document recent Stians game feature branch merge.
 - Merged Stians game feature branch with completed game mechanics, UI polish, and accessibility improvements.

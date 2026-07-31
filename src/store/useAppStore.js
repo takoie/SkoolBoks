@@ -232,6 +232,7 @@ export const useAppStore = create(
         })),
 
       stiansGame: makeInitialStiansGame(),
+      stiansGameHistory: [],
 
       addStiansGroup: (name) =>
         set((s) => {
@@ -421,8 +422,34 @@ export const useAppStore = create(
             leadGroupId: null,
           },
         })),
+      // Archives the current game (if it ever left setup) into history before
+      // resetting, so "+ Ny Stians game" and finished/abandoned games are
+      // never silently lost — they show up in the history list instead.
       resetStiansGameFull: () =>
-        set(() => ({ stiansGame: makeInitialStiansGame() })),
+        set((s) => {
+          const g = s.stiansGame;
+          const shouldArchive = g.groups.length > 0 && g.phase !== "setup";
+          if (!shouldArchive) {
+            return { stiansGame: makeInitialStiansGame() };
+          }
+          const entry = {
+            id: crypto.randomUUID(),
+            endedAt: new Date().toISOString(),
+            groups: g.groups,
+            categories: g.categories,
+            scores: g.scores,
+            pointsPerRound: g.pointsPerRound,
+            wasAbandoned: g.phase !== "ended",
+          };
+          return {
+            stiansGame: makeInitialStiansGame(),
+            stiansGameHistory: [entry, ...s.stiansGameHistory].slice(0, 20),
+          };
+        }),
+      deleteStiansHistoryEntry: (id) =>
+        set((s) => ({
+          stiansGameHistory: s.stiansGameHistory.filter((e) => e.id !== id),
+        })),
     }),
     {
       name: "skoolbox-store",
@@ -437,6 +464,7 @@ export const useAppStore = create(
         stiansGame: s.stiansGame,
         wheels: s.wheels,
         removedSectors: s.removedSectors,
+        stiansGameHistory: s.stiansGameHistory,
       }),
     }
   )
