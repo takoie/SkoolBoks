@@ -5,12 +5,20 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 ## [Unreleased]
 
 ### Added
+- Wheel sector editor now supports importing sectors from saved lists with an "Importer fra liste" button.
+- Wheel presentation mode: centered spin button in the middle of the wheel when the editor is hidden, with a winner popup showing the winning sector and offering quick respin or remove-and-respin actions.
+- Wheel landing point is now randomized within the winning sector (with safe margins) instead of always centered, creating a more unpredictable casino-like spin experience; control buttons and status moved to a left column layout, and collapsed-editor wheel size reduced.
+- Wheel idle-spin animation, editor-hide toggle, self-scaling labels that adapt to available space, and responsive wheel sizing.
+- Wheel spinner animation now runs on requestAnimationFrame with tick sound playback on each spin rotation.
+- Wheel spinner now renders sector labels directly on the wheel itself.
+- Wheel module now includes idle-spin keyframes animation.
 - Stians game: per-round game history with view and delete capabilities.
 - New "Hjul" module: create, save, reopen, and delete named wheels with a row-based sector editor (bulk text import supported), an animated SVG spinner with sound and confetti, and an optional "remove winner after spin" mode with undo/reset — accessible from the dashboard.
 - Stians game: Review phase now supports 50% credit and minus-point marks in addition to godkjent/ikke godkjent, and any group can be marked at any time instead of a fixed turn order — useful when several groups gave the same wrong answer.
 - Stians game: Scoreboard highlights the category column currently under review and previews pending points live as "forrige+endring" (e.g. "0+1") before the round is committed.
 
 ### Changed
+- Wheel spinner animation now uses quintic ease-out and longer duration (5.5s) for more suspenseful deceleration that crawls noticeably in the final stretch before landing.
 - Synced pending workspace edits across spin wheel, Stians game, timer, dice, nearest-thousand modules, and shared UI/store code.
 - Stians game: The manual letter input is now masked (shown as dots) so the letter stays hidden until "Bruk" reveals it in the main display.
 - Updated changelog to document recent Stians game feature branch merge.
@@ -19,6 +27,9 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 - Consolidated fragmented Hjul module changelog entries into one comprehensive summary.
 
 ### Fixed
+- Wheel: removed "Vinner" label from the winner popup for accuracy (the spun result is not always a winner).
+- Wheel winner popup backdrop now covers the entire viewport by using a portal, instead of being constrained to the module area by animation-induced containing blocks.
+- Wheel: presentation mode now shows only the wheel and center button by hiding status text, and winner popup uses a neutral black backdrop instead of a tinted overlay.
 - Hjul: fixed an infinite re-render crash ("Maximum update depth exceeded") when opening a wheel with no removed sectors yet, caused by a store selector returning a new empty array on every render.
 - Hjul: sector list now locks while the wheel is spinning, blank sector rows can no longer be spun, and the spin button shows a hint instead of just going dead when fewer than two labeled sectors exist.
 - Stians game: Fixed round letter persistence, added mid-round game exit, wired up team name editing with input validation.
