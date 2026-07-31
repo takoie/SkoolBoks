@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, RotateCcw, Undo2 } from "lucide-react";
+import { ArrowLeft, PanelRightClose, PanelRightOpen, RotateCcw, Undo2 } from "lucide-react";
 import { useAppStore } from "../../store/useAppStore";
 import { playSound } from "../../lib/sound";
 import { fireConfetti } from "../../lib/confetti";
@@ -25,13 +25,27 @@ function sectorPath(index, total) {
   return `M ${RADIUS} ${RADIUS} L ${x1} ${y1} A ${RADIUS} ${RADIUS} 0 ${largeArc} 1 ${x2} ${y2} Z`;
 }
 
-const LABEL_RADIUS = RADIUS * 0.62;
-const LABEL_MAX_CHARS = 16;
+// Labels run from near the hub out toward the rim so long text fills the
+// sector radially instead of sitting small and centered.
+const LABEL_START_RADIUS = RADIUS * 0.2;
+const LABEL_END_RADIUS = RADIUS * 0.92;
+const LABEL_MAX_CHARS = 26;
+const LABEL_MAX_FONT_SIZE = 20;
+const LABEL_MIN_FONT_SIZE = 9;
+const AVG_CHAR_WIDTH_EM = 0.58; // approximation for our bold heading font
 
 function truncateLabel(label) {
   return label.length > LABEL_MAX_CHARS
     ? `${label.slice(0, LABEL_MAX_CHARS - 1)}…`
     : label;
+}
+
+function sectorLabelFontSize(label) {
+  const availableLength = LABEL_END_RADIUS - LABEL_START_RADIUS;
+  const widthAtMaxFont = label.length * AVG_CHAR_WIDTH_EM * LABEL_MAX_FONT_SIZE;
+  if (widthAtMaxFont <= availableLength) return LABEL_MAX_FONT_SIZE;
+  const scaled = availableLength / (label.length * AVG_CHAR_WIDTH_EM);
+  return Math.max(LABEL_MIN_FONT_SIZE, Math.min(LABEL_MAX_FONT_SIZE, scaled));
 }
 
 function sectorLabelTransform(index, total) {
@@ -62,6 +76,7 @@ function WheelSpinner({ wheelId, onBack }) {
   const rafRef = useRef(null);
   const idleStartRef = useRef(Date.now());
   const [hasSpunOnce, setHasSpunOnce] = useState(false);
+  const [showEditor, setShowEditor] = useState(true);
 
   const activeSectors = useMemo(
     () =>
@@ -149,7 +164,11 @@ function WheelSpinner({ wheelId, onBack }) {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 lg:flex-row lg:items-start">
+    <div
+      className={`mx-auto flex w-full flex-col gap-8 lg:flex-row lg:items-start ${
+        showEditor ? "max-w-7xl" : "max-w-[1600px]"
+      }`}
+    >
       <div className="flex flex-1 flex-col items-center text-center">
         <div className="mb-4 flex w-full items-center gap-3">
           <button
@@ -161,9 +180,29 @@ function WheelSpinner({ wheelId, onBack }) {
             <ArrowLeft size={22} aria-hidden="true" />
           </button>
           <h2 className="font-heading text-3xl font-semibold text-ink">{wheel.name}</h2>
+          <button
+            type="button"
+            onClick={() => setShowEditor((v) => !v)}
+            aria-label={showEditor ? "Skjul sektor-listen" : "Vis sektor-listen"}
+            className="ml-auto flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-ink/70 transition-colors hover:bg-ink/10"
+          >
+            {showEditor ? (
+              <PanelRightClose size={22} aria-hidden="true" />
+            ) : (
+              <PanelRightOpen size={22} aria-hidden="true" />
+            )}
+          </button>
         </div>
 
-        <div className="relative mb-8" style={{ width: WHEEL_SIZE, height: WHEEL_SIZE }}>
+        <div
+          className="relative mb-8"
+          style={{
+            width: showEditor
+              ? "clamp(300px, min(48vw, 58vh), 460px)"
+              : "clamp(340px, min(80vw, 76vh), 760px)",
+            aspectRatio: "1 / 1",
+          }}
+        >
           <div
             className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2"
             style={{
@@ -176,9 +215,10 @@ function WheelSpinner({ wheelId, onBack }) {
             aria-hidden="true"
           />
           <svg
-            width={WHEEL_SIZE}
-            height={WHEEL_SIZE}
+            width="100%"
+            height="100%"
             viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`}
+            className={!hasSpunOnce && !spinning ? "animate-idle-spin" : ""}
             style={{
               transform: `rotate(${rotation}deg)`,
             }}
@@ -186,20 +226,24 @@ function WheelSpinner({ wheelId, onBack }) {
             {activeSectors.map((sector, i) => (
               <path key={sector.id} d={sectorPath(i, activeSectors.length)} fill={sectorColor(i)} stroke="var(--color-surface)" strokeWidth={2} />
             ))}
-            {activeSectors.map((sector, i) => (
-              <text
-                key={`${sector.id}-label`}
-                transform={sectorLabelTransform(i, activeSectors.length)}
-                x={RADIUS + LABEL_RADIUS}
-                y={RADIUS}
-                dy="0.35em"
-                textAnchor="end"
-                fill="var(--color-accent-ink)"
-                className="pointer-events-none select-none font-heading text-sm font-semibold"
-              >
-                {truncateLabel(sector.label)}
-              </text>
-            ))}
+            {activeSectors.map((sector, i) => {
+              const label = truncateLabel(sector.label);
+              return (
+                <text
+                  key={`${sector.id}-label`}
+                  transform={sectorLabelTransform(i, activeSectors.length)}
+                  x={RADIUS + LABEL_END_RADIUS}
+                  y={RADIUS}
+                  dy="0.35em"
+                  textAnchor="end"
+                  fontSize={sectorLabelFontSize(label)}
+                  fill="var(--color-accent-ink)"
+                  className="pointer-events-none select-none font-heading font-semibold"
+                >
+                  {label}
+                </text>
+              );
+            })}
           </svg>
         </div>
 
@@ -254,19 +298,21 @@ function WheelSpinner({ wheelId, onBack }) {
         </label>
       </div>
 
-      <aside className="w-full shrink-0 rounded-xl2 border-2 border-ink/10 bg-surface p-5 text-left shadow-clay lg:w-[26rem]">
-        <h3 className="mb-4 font-heading text-xl font-semibold text-ink">Sektorer</h3>
-        {spinning && (
-          <p className="mb-3 text-sm text-ink/60">
-            Sektorene kan ikke endres mens hjulet spinner.
-          </p>
-        )}
-        <SectorEditor
-          sectors={wheel.sectors}
-          onChange={(sectors) => setWheelSectors(wheelId, sectors)}
-          disabled={spinning}
-        />
-      </aside>
+      {showEditor && (
+        <aside className="w-full shrink-0 rounded-xl2 border-2 border-ink/10 bg-surface p-5 text-left shadow-clay lg:w-[26rem]">
+          <h3 className="mb-4 font-heading text-xl font-semibold text-ink">Sektorer</h3>
+          {spinning && (
+            <p className="mb-3 text-sm text-ink/60">
+              Sektorene kan ikke endres mens hjulet spinner.
+            </p>
+          )}
+          <SectorEditor
+            sectors={wheel.sectors}
+            onChange={(sectors) => setWheelSectors(wheelId, sectors)}
+            disabled={spinning}
+          />
+        </aside>
+      )}
     </div>
   );
 }
