@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { Plus, Trash2, Upload } from "lucide-react";
 
-function SectorEditor({ sectors, onChange }) {
+function SectorEditor({ sectors, onChange, disabled = false }) {
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState("");
   const inputRefs = useRef({});
@@ -47,7 +47,7 @@ function SectorEditor({ sectors, onChange }) {
   }
 
   return (
-    <div>
+    <fieldset disabled={disabled}>
       <div className="mb-3 flex flex-col gap-2">
         {sectors.map((sector) => (
           <div key={sector.id} className="flex items-center gap-2">
@@ -118,7 +118,7 @@ function SectorEditor({ sectors, onChange }) {
           </div>
         </div>
       )}
-    </div>
+    </fieldset>
   );
 }
 

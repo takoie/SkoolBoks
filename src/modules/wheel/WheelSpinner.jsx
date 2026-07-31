@@ -39,7 +39,10 @@ function WheelSpinner({ wheelId, onBack }) {
   const [winner, setWinner] = useState(null);
 
   const activeSectors = useMemo(
-    () => wheel.sectors.filter((s) => !removedIds.includes(s.id)),
+    () =>
+      wheel.sectors.filter(
+        (s) => !removedIds.includes(s.id) && s.label.trim() !== ""
+      ),
     [wheel.sectors, removedIds]
   );
 
@@ -116,7 +119,13 @@ function WheelSpinner({ wheelId, onBack }) {
 
         <div className="mb-6 flex min-h-[64px] items-center justify-center">
           <span className="font-heading text-2xl font-bold text-primary">
-            {winner ? winner.label : spinning ? "Snurrer…" : "Klar for å spinne?"}
+            {activeSectors.length < 2
+              ? "Legg til minst to sektorer med tekst for å spinne"
+              : winner
+                ? winner.label
+                : spinning
+                  ? "Snurrer…"
+                  : "Klar for å spinne?"}
           </span>
         </div>
 
@@ -161,7 +170,16 @@ function WheelSpinner({ wheelId, onBack }) {
 
       <aside className="w-full shrink-0 rounded-xl2 border-2 border-ink/10 bg-surface p-5 text-left shadow-clay lg:w-[26rem]">
         <h3 className="mb-4 font-heading text-xl font-semibold text-ink">Sektorer</h3>
-        <SectorEditor sectors={wheel.sectors} onChange={(sectors) => setWheelSectors(wheelId, sectors)} />
+        {spinning && (
+          <p className="mb-3 text-sm text-ink/60">
+            Sektorene kan ikke endres mens hjulet spinner.
+          </p>
+        )}
+        <SectorEditor
+          sectors={wheel.sectors}
+          onChange={(sectors) => setWheelSectors(wheelId, sectors)}
+          disabled={spinning}
+        />
       </aside>
     </div>
   );
