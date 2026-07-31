@@ -17,6 +17,7 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 - Consolidated fragmented Hjul module changelog entries into one comprehensive summary.
 
 ### Fixed
+- Hjul: sector list now locks while the wheel is spinning, blank sector rows can no longer be spun, and the spin button shows a hint instead of just going dead when fewer than two labeled sectors exist.
 - Stians game: Fixed round letter persistence, added mid-round game exit, wired up team name editing with input validation.
 - Stians game: Fixed React setState-during-render warning in writing-timer expiry handling.
 - Stians game: Winner announcement in ended phase now uses live region for screen reader consistency with other phases.
