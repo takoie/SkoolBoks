@@ -373,7 +373,6 @@ function WheelSpinner({ wheelId, onBack }) {
               className="w-full max-w-md rounded-xl2 bg-surface p-8 text-center shadow-clay animate-modal-in"
               onClick={(e) => e.stopPropagation()}
             >
-              <p className="mb-2 font-body text-lg text-ink/60">Vinner</p>
               <p className="mb-8 break-words font-heading text-4xl font-bold text-primary">
                 {winner.label}
               </p>
