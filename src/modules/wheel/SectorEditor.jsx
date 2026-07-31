@@ -1,9 +1,13 @@
 import { useRef, useState } from "react";
-import { Plus, Trash2, Upload } from "lucide-react";
+import { List, Plus, Trash2, Upload } from "lucide-react";
+import { useAppStore } from "../../store/useAppStore";
 
 function SectorEditor({ sectors, onChange, disabled = false }) {
+  const lists = useAppStore((s) => s.classes);
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState("");
+  const [listImportOpen, setListImportOpen] = useState(false);
+  const [selectedListId, setSelectedListId] = useState("");
   const inputRefs = useRef({});
 
   function updateLabel(id, label) {
@@ -46,6 +50,20 @@ function SectorEditor({ sectors, onChange, disabled = false }) {
     setImportOpen(false);
   }
 
+  function openListImport() {
+    setImportOpen(false);
+    setSelectedListId((current) => current || Object.keys(lists)[0] || "");
+    setListImportOpen((v) => !v);
+  }
+
+  function applyListImport() {
+    const names = lists[selectedListId]?.students ?? [];
+    if (names.length > 0) {
+      onChange(names.map((label) => ({ id: crypto.randomUUID(), label })));
+    }
+    setListImportOpen(false);
+  }
+
   return (
     <fieldset disabled={disabled}>
       <div className="mb-3 flex flex-col gap-2">
@@ -83,11 +101,22 @@ function SectorEditor({ sectors, onChange, disabled = false }) {
         </button>
         <button
           type="button"
-          onClick={() => setImportOpen((v) => !v)}
+          onClick={() => {
+            setListImportOpen(false);
+            setImportOpen((v) => !v);
+          }}
           className="flex min-h-touch cursor-pointer items-center gap-2 rounded-xl2 border-2 border-ink/10 px-4 py-2 font-heading font-semibold text-ink transition-colors hover:bg-ink/5"
         >
           <Upload size={18} aria-hidden="true" />
           Importer fra tekst
+        </button>
+        <button
+          type="button"
+          onClick={openListImport}
+          className="flex min-h-touch cursor-pointer items-center gap-2 rounded-xl2 border-2 border-ink/10 px-4 py-2 font-heading font-semibold text-ink transition-colors hover:bg-ink/5"
+        >
+          <List size={18} aria-hidden="true" />
+          Importer fra liste
         </button>
       </div>
 
@@ -111,6 +140,43 @@ function SectorEditor({ sectors, onChange, disabled = false }) {
             <button
               type="button"
               onClick={() => setImportOpen(false)}
+              className="min-h-touch cursor-pointer rounded-xl2 border-2 border-ink/10 px-4 py-2 font-heading font-semibold text-ink transition-colors hover:bg-ink/5"
+            >
+              Avbryt
+            </button>
+          </div>
+        </div>
+      )}
+
+      {listImportOpen && (
+        <div className="mt-3 flex flex-col gap-2">
+          {Object.keys(lists).length === 0 ? (
+            <p className="font-body text-base text-ink/60">Ingen lister tilgjengelig.</p>
+          ) : (
+            <select
+              value={selectedListId}
+              onChange={(e) => setSelectedListId(e.target.value)}
+              className="min-h-touch w-full rounded-xl2 border-2 border-ink/10 bg-surface px-4 py-2 font-body text-base text-ink"
+            >
+              {Object.entries(lists).map(([id, list]) => (
+                <option key={id} value={id}>
+                  {list.name} · {list.students.length}
+                </option>
+              ))}
+            </select>
+          )}
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={applyListImport}
+              disabled={!lists[selectedListId]?.students.length}
+              className="min-h-touch cursor-pointer rounded-xl2 bg-primary px-4 py-2 font-heading font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Erstatt sektorer
+            </button>
+            <button
+              type="button"
+              onClick={() => setListImportOpen(false)}
               className="min-h-touch cursor-pointer rounded-xl2 border-2 border-ink/10 px-4 py-2 font-heading font-semibold text-ink transition-colors hover:bg-ink/5"
             >
               Avbryt
