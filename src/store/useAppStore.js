@@ -111,24 +111,32 @@ export const useAppStore = create(
       stiansGame: makeInitialStiansGame(),
 
       addStiansGroup: (name) =>
-        set((s) => ({
-          stiansGame: {
-            ...s.stiansGame,
-            groups: [
-              ...s.stiansGame.groups,
-              { id: crypto.randomUUID(), name },
-            ],
-          },
-        })),
+        set((s) => {
+          const trimmed = name.trim();
+          if (!trimmed) return {};
+          return {
+            stiansGame: {
+              ...s.stiansGame,
+              groups: [
+                ...s.stiansGame.groups,
+                { id: crypto.randomUUID(), name: trimmed },
+              ],
+            },
+          };
+        }),
       renameStiansGroup: (id, name) =>
-        set((s) => ({
-          stiansGame: {
-            ...s.stiansGame,
-            groups: s.stiansGame.groups.map((g) =>
-              g.id === id ? { ...g, name } : g
-            ),
-          },
-        })),
+        set((s) => {
+          const trimmed = name.trim();
+          if (!trimmed) return {};
+          return {
+            stiansGame: {
+              ...s.stiansGame,
+              groups: s.stiansGame.groups.map((g) =>
+                g.id === id ? { ...g, name: trimmed } : g
+              ),
+            },
+          };
+        }),
       removeStiansGroup: (id) =>
         set((s) => {
           const scores = { ...s.stiansGame.scores };

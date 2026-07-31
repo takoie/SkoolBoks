@@ -86,6 +86,39 @@ function ClampedNumberInput({ value, onCommit, className, ...inputProps }) {
   );
 }
 
+// Same commit-on-blur shape as ClampedNumberInput. The store rejects blank
+// names, so an empty submission is caught here and resynced locally rather
+// than relying on the name-changed effect, which wouldn't fire in that case
+// (a rejected commit leaves the stored name — and thus this prop — unchanged).
+function EditableGroupName({ name, onCommit }) {
+  const [draft, setDraft] = useState(name);
+
+  useEffect(() => {
+    setDraft(name);
+  }, [name]);
+
+  function commit() {
+    const trimmed = draft.trim();
+    if (!trimmed) {
+      setDraft(name);
+      return;
+    }
+    onCommit(trimmed);
+  }
+
+  return (
+    <input
+      type="text"
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+      aria-label={`Endre navn på ${name}`}
+      className="w-32 bg-transparent font-body text-lg text-ink focus:outline-none"
+    />
+  );
+}
+
 function IdlePhase() {
   const usedLetters = useAppStore((s) => s.stiansGame.usedLetters);
   const currentLetter = useAppStore((s) => s.stiansGame.currentLetter);
@@ -232,6 +265,7 @@ function SetupPhase() {
   const categories = useAppStore((s) => s.stiansGame.categories);
   const categoryBank = useAppStore((s) => s.categoryBank);
   const addStiansGroup = useAppStore((s) => s.addStiansGroup);
+  const renameStiansGroup = useAppStore((s) => s.renameStiansGroup);
   const removeStiansGroup = useAppStore((s) => s.removeStiansGroup);
   const addCategoryToBank = useAppStore((s) => s.addCategoryToBank);
   const removeCategoryFromBank = useAppStore((s) => s.removeCategoryFromBank);
@@ -305,7 +339,10 @@ function SetupPhase() {
               key={g.id}
               className="flex items-center gap-2 rounded-full border-2 border-ink/10 bg-surface px-4 py-2 font-body text-lg text-ink shadow-clay"
             >
-              {g.name}
+              <EditableGroupName
+                name={g.name}
+                onCommit={(name) => renameStiansGroup(g.id, name)}
+              />
               <button
                 type="button"
                 onClick={() => removeStiansGroup(g.id)}
@@ -419,6 +456,7 @@ function WritingPhase() {
   const groups = useAppStore((s) => s.stiansGame.groups);
   const timerSeconds = useAppStore((s) => s.stiansGame.timerSeconds);
   const stopStiansWriting = useAppStore((s) => s.stopStiansWriting);
+  const endStiansGame = useAppStore((s) => s.endStiansGame);
 
   const [remaining, setRemaining] = useState(timerSeconds);
   const [running, setRunning] = useState(false);
@@ -527,6 +565,14 @@ function WritingPhase() {
           </button>
         ))}
       </div>
+
+      <button
+        type="button"
+        onClick={endStiansGame}
+        className="mt-8 min-h-touch cursor-pointer rounded-xl2 border-2 border-destructive/30 px-6 py-3 font-heading text-lg font-semibold text-destructive transition-colors hover:bg-destructive/10"
+      >
+        Avslutt spill
+      </button>
     </div>
   );
 }
@@ -534,6 +580,7 @@ function WritingPhase() {
 function ReviewingPhase() {
   const stiansGame = useAppStore((s) => s.stiansGame);
   const markStiansApproval = useAppStore((s) => s.markStiansApproval);
+  const endStiansGame = useAppStore((s) => s.endStiansGame);
   const { review, categories, groups, leadGroupId } = stiansGame;
   const currentRowRef = useRef(null);
 
@@ -622,6 +669,14 @@ function ReviewingPhase() {
           );
         })}
       </div>
+
+      <button
+        type="button"
+        onClick={endStiansGame}
+        className="min-h-touch cursor-pointer rounded-xl2 border-2 border-destructive/30 px-6 py-3 font-heading text-lg font-semibold text-destructive transition-colors hover:bg-destructive/10"
+      >
+        Avslutt spill
+      </button>
     </div>
   );
 }

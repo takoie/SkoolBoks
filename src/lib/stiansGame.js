@@ -57,6 +57,9 @@ export function commitRound(stiansGame) {
     scores,
     review: null,
     leadGroupId: null,
+    // Force a fresh draw next round — otherwise "Start skriving" stays
+    // enabled on the previous round's letter with no signal it's stale.
+    currentLetter: null,
     phase: "idle",
   };
 }
