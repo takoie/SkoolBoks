@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, RotateCcw, Undo2 } from "lucide-react";
 import { useAppStore } from "../../store/useAppStore";
 import { playSound } from "../../lib/sound";
@@ -40,6 +40,10 @@ function sectorLabelTransform(index, total) {
   return `rotate(${centerAngle - 90} ${RADIUS} ${RADIUS})`;
 }
 
+function easeOutCubic(t) {
+  return 1 - Math.pow(1 - t, 3);
+}
+
 function WheelSpinner({ wheelId, onBack }) {
   const wheel = useAppStore((s) => s.wheels[wheelId]);
   const removedIds = useAppStore(
@@ -55,6 +59,9 @@ function WheelSpinner({ wheelId, onBack }) {
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [winner, setWinner] = useState(null);
+  const rafRef = useRef(null);
+  const idleStartRef = useRef(Date.now());
+  const [hasSpunOnce, setHasSpunOnce] = useState(false);
 
   const activeSectors = useMemo(
     () =>
@@ -64,22 +71,70 @@ function WheelSpinner({ wheelId, onBack }) {
     [wheel.sectors, removedIds]
   );
 
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
   function spin() {
     if (spinning || activeSectors.length < 2) return;
     setSpinning(true);
     setWinner(null);
+    setHasSpunOnce(true);
+
+    const sliceDeg = 360 / activeSectors.length;
+    const startRotation = hasSpunOnce
+      ? rotation
+      : ((Date.now() - idleStartRef.current) / 24000) * 360;
     const winnerIndex = pickWinnerIndex(activeSectors.length);
-    const nextRotation = computeSpinRotation(rotation, winnerIndex, activeSectors.length);
-    setRotation(nextRotation);
-    playSound("tick", soundEnabled);
-    window.setTimeout(() => {
+    const targetRotation = computeSpinRotation(startRotation, winnerIndex, activeSectors.length);
+    const deltaDeg = targetRotation - startRotation;
+    const duration = 4000;
+
+    const prefersReduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    function finish() {
       const picked = activeSectors[winnerIndex];
+      setRotation(targetRotation);
       setWinner(picked);
       setSpinning(false);
       if (wheel.removeAfterSpin) markSectorRemoved(wheelId, picked.id);
       playSound("tada", soundEnabled);
       fireConfetti();
-    }, 4000);
+    }
+
+    if (prefersReduced) {
+      finish();
+      return;
+    }
+
+    let lastTickSlice = Math.floor(startRotation / sliceDeg);
+    let start = null;
+
+    function frame(timestamp) {
+      if (start === null) start = timestamp;
+      const elapsed = timestamp - start;
+      const t = Math.min(elapsed / duration, 1);
+      const current = startRotation + deltaDeg * easeOutCubic(t);
+      setRotation(current);
+
+      const currentSlice = Math.floor(current / sliceDeg);
+      if (currentSlice > lastTickSlice) {
+        lastTickSlice = currentSlice;
+        playSound("tick", soundEnabled);
+      }
+
+      if (t < 1) {
+        rafRef.current = requestAnimationFrame(frame);
+      } else {
+        finish();
+      }
+    }
+
+    rafRef.current = requestAnimationFrame(frame);
   }
 
   function handleUndo() {
@@ -126,7 +181,6 @@ function WheelSpinner({ wheelId, onBack }) {
             viewBox={`0 0 ${WHEEL_SIZE} ${WHEEL_SIZE}`}
             style={{
               transform: `rotate(${rotation}deg)`,
-              transition: spinning ? "transform 4s cubic-bezier(0.17, 0.67, 0.16, 0.99)" : "none",
             }}
           >
             {activeSectors.map((sector, i) => (
