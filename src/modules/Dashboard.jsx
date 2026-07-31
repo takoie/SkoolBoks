@@ -6,6 +6,7 @@ import {
   Hash,
   Dice5,
   Puzzle,
+  CircleDot,
 } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import ModuleCard from "../components/ModuleCard";
@@ -59,6 +60,13 @@ const MODULES = [
     title: "Stians game",
     description: "Bokstav, kategorier og poeng — lagspill i runder.",
     accent: "secondary",
+  },
+  {
+    id: "wheel",
+    icon: CircleDot,
+    title: "Hjul",
+    description: "Lag og spinn egne hjul med valgfrie sektorer.",
+    accent: "lime",
   },
 ];
 

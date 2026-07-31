@@ -11,6 +11,7 @@ import ClassList from "./modules/ClassList";
 import NearestThousand from "./modules/NearestThousand";
 import DiceRoller from "./modules/DiceRoller";
 import StiansGame from "./modules/StiansGame";
+import WheelArena from "./modules/wheel/WheelArena";
 
 const MODULE_COMPONENTS = {
   dashboard: Dashboard,
@@ -21,6 +22,7 @@ const MODULE_COMPONENTS = {
   nearestthousand: NearestThousand,
   dice: DiceRoller,
   stiansgame: StiansGame,
+  wheel: WheelArena,
 };
 
 function App() {
