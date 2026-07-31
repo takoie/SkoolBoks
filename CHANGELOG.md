@@ -5,6 +5,7 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 ## [Unreleased]
 
 ### Fixed
+- Stians game: Fixed round letter persistence, added mid-round game exit, wired up team name editing with input validation.
 - Stians game: Fixed React setState-during-render warning in writing-timer expiry handling.
 - Stians game: Winner announcement in ended phase now uses live region for screen reader consistency with other phases.
 - Stians game: Fixed reviewing-phase focus to prevent accidental approval on stray Enter key presses, and improved turn change announcements.
