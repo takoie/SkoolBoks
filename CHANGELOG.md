@@ -17,6 +17,7 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 - Restored the ability to resize the window by dragging its edges/corners, which was lost when the native title bar was removed.
 - Fixed title bar buttons occasionally being obscured by the window's resize-drag regions.
 - Raised the titlebar button cluster above window resize-handle overlays using z-index.
+- Quiz-arena editor and player now show a friendly "quiz not found" message with a way back instead of a blank page, and the player plays a sound when a question is opened or a team's score changes.
 
 ### Added
 - Added a custom title bar with logo, theme toggle, and window controls.
@@ -36,3 +37,8 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 - Synthesized Web Audio API sound effects and `canvas-confetti` micro-interactions, both respecting `prefers-reduced-motion`.
 - NSIS and MSI installer targets configured in `tauri.conf.json` (1280x800 window, 1024x768 minimum).
 - `npm run start` script to launch the desktop app in dev mode (`npm run dev` remains Vite-only, as required by `beforeDevCommand`).
+- Persisted `quizzes` slice in the Zustand store (create/update/delete quizzes), backing the quiz editor and player views.
+- "Nærmest tusen" module: draw 9 digits and reveal the 3x3 digit arrangement whose sum lands closest to 1000, wired into the dashboard and app routing.
+- "Terningkast" dice roller module, wired into the dashboard and app routing.
+- Elevtrekker now shows a draw-history sidebar listing every student, marking drawn ones with a numbered badge and strikethrough in draw order.
+- Split Quiz-arena into a list, editor, and player view: browse saved quizzes, name categories/point levels and fill in question/answer text per cell, then run a saved quiz as a Jeopardy-style board with per-question answer reveal and team scoring — all wired into a single router, replacing the old single-file Jeopardy module.

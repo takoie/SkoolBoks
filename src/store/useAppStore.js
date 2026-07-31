@@ -61,6 +61,44 @@ export const useAppStore = create(
       settings: { soundEnabled: true, theme: "dark" },
       setSettings: (partial) =>
         set((s) => ({ settings: { ...s.settings, ...partial } })),
+
+      quizzes: {},
+
+      createQuiz: (name) => {
+        const id = crypto.randomUUID();
+        set((s) => ({
+          quizzes: {
+            ...s.quizzes,
+            [id]: {
+              id,
+              name,
+              categories: [
+                { id: crypto.randomUUID(), name: "Kategori 1" },
+                { id: crypto.randomUUID(), name: "Kategori 2" },
+              ],
+              points: [
+                { id: crypto.randomUUID(), value: 100 },
+                { id: crypto.randomUUID(), value: 200 },
+                { id: crypto.randomUUID(), value: 300 },
+              ],
+              cells: {},
+            },
+          },
+        }));
+        return id;
+      },
+
+      updateQuiz: (id, partial) =>
+        set((s) => ({
+          quizzes: { ...s.quizzes, [id]: { ...s.quizzes[id], ...partial } },
+        })),
+
+      deleteQuiz: (id) =>
+        set((s) => {
+          const quizzes = { ...s.quizzes };
+          delete quizzes[id];
+          return { quizzes };
+        }),
     }),
     {
       name: "skoolbox-store",
@@ -70,6 +108,7 @@ export const useAppStore = create(
         activeClassId: s.activeClassId,
         drawnStudents: s.drawnStudents,
         settings: s.settings,
+        quizzes: s.quizzes,
       }),
     }
   )

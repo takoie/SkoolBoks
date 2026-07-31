@@ -1,4 +1,11 @@
-import { Dices, Trophy, Timer as TimerIcon, Users } from "lucide-react";
+import {
+  Dices,
+  Trophy,
+  Timer as TimerIcon,
+  Users,
+  Hash,
+  Dice5,
+} from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import ModuleCard from "../components/ModuleCard";
 
@@ -11,10 +18,10 @@ const MODULES = [
     accent: "coral",
   },
   {
-    id: "jeopardy",
+    id: "quizarena",
     icon: Trophy,
     title: "Quiz-arena",
-    description: "Kategorier og poeng — Jeopardy-stil.",
+    description: "Lag og spill quiz — kategorier og poeng.",
     accent: "peach",
   },
   {
@@ -30,6 +37,20 @@ const MODULES = [
     title: "Klasseliste",
     description: "Legg inn og administrer elevlister.",
     accent: "primary",
+  },
+  {
+    id: "nearestthousand",
+    icon: Hash,
+    title: "Nærmest tusen",
+    description: "Trekk 9 siffer og kom nærmest 1000.",
+    accent: "peach",
+  },
+  {
+    id: "dice",
+    icon: Dice5,
+    title: "Terningkast",
+    description: "Kast en eller flere terninger.",
+    accent: "coral",
   },
 ];
 
