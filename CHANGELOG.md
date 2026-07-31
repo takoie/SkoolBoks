@@ -5,17 +5,11 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 ## [Unreleased]
 
 ### Added
-- Added the underlying data storage for a new "Hjul" (wheel) picker module, letting the app remember wheel names, options, and spin-removal settings (UI for it lands in a later update).
-- Added the core wheel-spin logic (picking a winner, spin rotation, and slice colors) for the upcoming "Hjul" (wheel) picker module.
-- Added a sector editor for the upcoming "Hjul" (wheel) picker module, letting users add, remove, and bulk-import wheel options from pasted text.
-- Added a list view for the upcoming "Hjul" (wheel) picker module, letting users create, open, and delete wheels.
-- Added the interactive spinner screen for the upcoming "Hjul" (wheel) picker module, with an animated SVG wheel, spin/undo/reset controls, and an embedded sector editor.
-- Added the view switcher that ties together the wheel list and spinner screens for the upcoming "Hjul" (wheel) picker module.
+- New "Hjul" module: create, save, reopen, and delete named wheels with a row-based sector editor (bulk text import supported), an animated SVG spinner with sound and confetti, and an optional "remove winner after spin" mode with undo/reset — accessible from the dashboard.
 - Stians game: Review phase now supports 50% credit and minus-point marks in addition to godkjent/ikke godkjent, and any group can be marked at any time instead of a fixed turn order — useful when several groups gave the same wrong answer.
 - Stians game: Scoreboard highlights the category column currently under review and previews pending points live as "forrige+endring" (e.g. "0+1") before the round is committed.
 
 ### Changed
-- The "Hjul" (wheel) picker module is now wired into the app's routing and dashboard, making it accessible from the UI.
 - Stians game: The manual letter input is now masked (shown as dots) so the letter stays hidden until "Bruk" reveals it in the main display.
 - Updated changelog to document recent Stians game feature branch merge.
 - Merged Stians game feature branch with completed game mechanics, UI polish, and accessibility improvements.
