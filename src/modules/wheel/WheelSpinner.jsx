@@ -8,6 +8,7 @@ import SectorEditor from "./SectorEditor";
 
 const WHEEL_SIZE = 360;
 const RADIUS = WHEEL_SIZE / 2;
+const EMPTY_REMOVED_IDS = [];
 
 function polarPoint(angleDeg, radius) {
   const rad = ((angleDeg - 90) * Math.PI) / 180;
@@ -26,7 +27,9 @@ function sectorPath(index, total) {
 
 function WheelSpinner({ wheelId, onBack }) {
   const wheel = useAppStore((s) => s.wheels[wheelId]);
-  const removedIds = useAppStore((s) => s.removedSectors[wheelId] ?? []);
+  const removedIds = useAppStore(
+    (s) => s.removedSectors[wheelId] ?? EMPTY_REMOVED_IDS
+  );
   const setWheelSectors = useAppStore((s) => s.setWheelSectors);
   const setWheelRemoveAfterSpin = useAppStore((s) => s.setWheelRemoveAfterSpin);
   const markSectorRemoved = useAppStore((s) => s.markSectorRemoved);

@@ -5,6 +5,7 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 ## [Unreleased]
 
 ### Added
+- Stians game: per-round game history with view and delete capabilities.
 - New "Hjul" module: create, save, reopen, and delete named wheels with a row-based sector editor (bulk text import supported), an animated SVG spinner with sound and confetti, and an optional "remove winner after spin" mode with undo/reset — accessible from the dashboard.
 - Stians game: Review phase now supports 50% credit and minus-point marks in addition to godkjent/ikke godkjent, and any group can be marked at any time instead of a fixed turn order — useful when several groups gave the same wrong answer.
 - Stians game: Scoreboard highlights the category column currently under review and previews pending points live as "forrige+endring" (e.g. "0+1") before the round is committed.
@@ -18,6 +19,7 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 - Consolidated fragmented Hjul module changelog entries into one comprehensive summary.
 
 ### Fixed
+- Hjul: fixed an infinite re-render crash ("Maximum update depth exceeded") when opening a wheel with no removed sectors yet, caused by a store selector returning a new empty array on every render.
 - Hjul: sector list now locks while the wheel is spinning, blank sector rows can no longer be spun, and the spin button shows a hint instead of just going dead when fewer than two labeled sectors exist.
 - Stians game: Fixed round letter persistence, added mid-round game exit, wired up team name editing with input validation.
 - Stians game: Fixed React setState-during-render warning in writing-timer expiry handling.
