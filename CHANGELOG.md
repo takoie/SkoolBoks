@@ -14,6 +14,7 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 - Updated changelog to document recent Stians game feature branch merge.
 - Merged Stians game feature branch with completed game mechanics, UI polish, and accessibility improvements.
 - Updated CHANGELOG.md with merged feature documentation.
+- Consolidated fragmented Hjul module changelog entries into one comprehensive summary.
 
 ### Fixed
 - Stians game: Fixed round letter persistence, added mid-round game exit, wired up team name editing with input validation.
