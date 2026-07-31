@@ -435,22 +435,26 @@ function WritingPhase() {
     if (!running) return undefined;
     intervalRef.current = setInterval(() => {
       setRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(intervalRef.current);
-          setRunning(false);
-          playSound("ding", soundEnabled);
-          if (!stoppedRef.current) {
-            stoppedRef.current = true;
-            stopStiansWriting(null);
-          }
-          return 0;
-        }
+        if (prev <= 1) return 0;
         if (prev <= 4) playSound("tick", soundEnabled);
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(intervalRef.current);
-  }, [running, soundEnabled, stopStiansWriting]);
+  }, [running, soundEnabled]);
+
+  // State updater functions must stay pure — triggering the store update
+  // (which re-renders StiansGame) directly inside setRemaining's updater
+  // above violates that and trips React's "setState while rendering a
+  // different component" warning. Reacting to the zero-crossing here instead
+  // keeps the store call in a normal effect, outside any render pass.
+  useEffect(() => {
+    if (remaining > 0 || stoppedRef.current) return;
+    setRunning(false);
+    playSound("ding", soundEnabled);
+    stoppedRef.current = true;
+    stopStiansWriting(null);
+  }, [remaining, soundEnabled, stopStiansWriting]);
 
   function handleShout(groupId) {
     if (stoppedRef.current) return;
