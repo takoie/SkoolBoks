@@ -54,8 +54,11 @@ function sectorLabelTransform(index, total) {
   return `rotate(${centerAngle - 90} ${RADIUS} ${RADIUS})`;
 }
 
-function easeOutCubic(t) {
-  return 1 - Math.pow(1 - t, 3);
+// A steep early deceleration with a long, slow-crawling tail — the last
+// stretch before landing drags out noticeably, which is what makes the
+// finish feel suspenseful instead of just linearly slowing down.
+function easeOutQuint(t) {
+  return 1 - Math.pow(1 - t, 5);
 }
 
 function WheelSpinner({ wheelId, onBack }) {
@@ -112,7 +115,7 @@ function WheelSpinner({ wheelId, onBack }) {
       landingOffset
     );
     const deltaDeg = targetRotation - startRotation;
-    const duration = 4000;
+    const duration = 5500;
 
     const prefersReduced = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
@@ -140,7 +143,7 @@ function WheelSpinner({ wheelId, onBack }) {
       if (start === null) start = timestamp;
       const elapsed = timestamp - start;
       const t = Math.min(elapsed / duration, 1);
-      const current = startRotation + deltaDeg * easeOutCubic(t);
+      const current = startRotation + deltaDeg * easeOutQuint(t);
       setRotation(current);
 
       const currentSlice = Math.floor(current / sliceDeg);
