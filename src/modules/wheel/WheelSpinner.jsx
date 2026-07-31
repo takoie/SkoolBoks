@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ArrowLeft, PanelRightClose, PanelRightOpen, RotateCcw, Undo2 } from "lucide-react";
 import { useAppStore } from "../../store/useAppStore";
 import { playSound } from "../../lib/sound";
@@ -361,38 +362,41 @@ function WheelSpinner({ wheelId, onBack }) {
         </aside>
       )}
 
-      {showWinnerModal && winner && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in"
-          onClick={() => setShowWinnerModal(false)}
-        >
+      {showWinnerModal &&
+        winner &&
+        createPortal(
           <div
-            className="w-full max-w-md rounded-xl2 bg-surface p-8 text-center shadow-clay animate-modal-in"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in"
+            onClick={() => setShowWinnerModal(false)}
           >
-            <p className="mb-2 font-body text-lg text-ink/60">Vinner</p>
-            <p className="mb-8 break-words font-heading text-4xl font-bold text-primary">
-              {winner.label}
-            </p>
-            <div className="flex flex-col gap-3">
-              <button
-                type="button"
-                onClick={() => handleRespin(false)}
-                className="flex min-h-touch cursor-pointer items-center justify-center gap-3 rounded-xl2 bg-primary px-6 py-3 font-heading text-lg font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97]"
-              >
-                Spinn på nytt
-              </button>
-              <button
-                type="button"
-                onClick={() => handleRespin(true)}
-                className="flex min-h-touch cursor-pointer items-center justify-center gap-3 rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-all duration-150 hover:bg-ink/5 active:scale-[0.97]"
-              >
-                Fjern og spinn på nytt
-              </button>
+            <div
+              className="w-full max-w-md rounded-xl2 bg-surface p-8 text-center shadow-clay animate-modal-in"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="mb-2 font-body text-lg text-ink/60">Vinner</p>
+              <p className="mb-8 break-words font-heading text-4xl font-bold text-primary">
+                {winner.label}
+              </p>
+              <div className="flex flex-col gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleRespin(false)}
+                  className="flex min-h-touch cursor-pointer items-center justify-center gap-3 rounded-xl2 bg-primary px-6 py-3 font-heading text-lg font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97]"
+                >
+                  Spinn på nytt
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleRespin(true)}
+                  className="flex min-h-touch cursor-pointer items-center justify-center gap-3 rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-all duration-150 hover:bg-ink/5 active:scale-[0.97]"
+                >
+                  Fjern og spinn på nytt
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
