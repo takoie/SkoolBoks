@@ -80,6 +80,8 @@ function WheelSpinner({ wheelId, onBack }) {
   const idleStartRef = useRef(Date.now());
   const [hasSpunOnce, setHasSpunOnce] = useState(false);
   const [showEditor, setShowEditor] = useState(true);
+  const [showWinnerModal, setShowWinnerModal] = useState(false);
+  const [respinTrigger, setRespinTrigger] = useState(0);
 
   const activeSectors = useMemo(
     () =>
@@ -94,6 +96,14 @@ function WheelSpinner({ wheelId, onBack }) {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, []);
+
+  // Fires after a respin request from the winner popup, once the store's
+  // removal (if any) has been committed and `activeSectors` reflects it.
+  useEffect(() => {
+    if (respinTrigger === 0) return;
+    spin();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [respinTrigger]);
 
   function spin() {
     if (spinning || activeSectors.length < 2) return;
@@ -127,6 +137,7 @@ function WheelSpinner({ wheelId, onBack }) {
       setWinner(picked);
       setSpinning(false);
       if (wheel.removeAfterSpin) markSectorRemoved(wheelId, picked.id);
+      setShowWinnerModal(true);
       playSound("tada", soundEnabled);
       fireConfetti();
     }
@@ -171,6 +182,14 @@ function WheelSpinner({ wheelId, onBack }) {
   function handleReset() {
     resetRemovedSectors(wheelId);
     setWinner(null);
+  }
+
+  function handleRespin(shouldRemoveWinner) {
+    setShowWinnerModal(false);
+    if (shouldRemoveWinner && winner && !removedIds.includes(winner.id)) {
+      markSectorRemoved(wheelId, winner.id);
+    }
+    setRespinTrigger((n) => n + 1);
   }
 
   return (
@@ -218,43 +237,47 @@ function WheelSpinner({ wheelId, onBack }) {
               </span>
             </div>
 
-            <div className="flex flex-col items-center gap-4 lg:items-start">
-              <button
-                type="button"
-                onClick={spin}
-                disabled={spinning || activeSectors.length < 2}
-                className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 bg-primary px-8 py-3 font-heading text-xl font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
-              >
-                {spinning ? "Spinner…" : "Spinn hjulet"}
-              </button>
-              <button
-                type="button"
-                onClick={handleUndo}
-                disabled={spinning || removedIds.length === 0}
-                className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-all duration-150 hover:bg-ink/5 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
-              >
-                <Undo2 size={22} aria-hidden="true" />
-                Angre
-              </button>
-              <button
-                type="button"
-                onClick={handleReset}
-                className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-all duration-150 hover:bg-ink/5 active:scale-[0.97]"
-              >
-                <RotateCcw size={22} aria-hidden="true" />
-                Nullstill
-              </button>
-            </div>
+            {showEditor && (
+              <>
+                <div className="flex flex-col items-center gap-4 lg:items-start">
+                  <button
+                    type="button"
+                    onClick={spin}
+                    disabled={spinning || activeSectors.length < 2}
+                    className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 bg-primary px-8 py-3 font-heading text-xl font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
+                  >
+                    {spinning ? "Spinner…" : "Spinn hjulet"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleUndo}
+                    disabled={spinning || removedIds.length === 0}
+                    className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-all duration-150 hover:bg-ink/5 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
+                  >
+                    <Undo2 size={22} aria-hidden="true" />
+                    Angre
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-all duration-150 hover:bg-ink/5 active:scale-[0.97]"
+                  >
+                    <RotateCcw size={22} aria-hidden="true" />
+                    Nullstill
+                  </button>
+                </div>
 
-            <label className="flex cursor-pointer items-center gap-3 font-body text-lg text-ink">
-              <input
-                type="checkbox"
-                checked={wheel.removeAfterSpin}
-                onChange={(e) => setWheelRemoveAfterSpin(wheelId, e.target.checked)}
-                className="h-6 w-6 cursor-pointer accent-primary"
-              />
-              Fjern vinner etter spinn
-            </label>
+                <label className="flex cursor-pointer items-center gap-3 font-body text-lg text-ink">
+                  <input
+                    type="checkbox"
+                    checked={wheel.removeAfterSpin}
+                    onChange={(e) => setWheelRemoveAfterSpin(wheelId, e.target.checked)}
+                    className="h-6 w-6 cursor-pointer accent-primary"
+                  />
+                  Fjern vinner etter spinn
+                </label>
+              </>
+            )}
           </div>
 
           <div
@@ -308,6 +331,18 @@ function WheelSpinner({ wheelId, onBack }) {
                 );
               })}
             </svg>
+            {!showEditor && (
+              <button
+                type="button"
+                onClick={spin}
+                disabled={spinning || activeSectors.length < 2}
+                aria-label="Spinn hjulet"
+                className="absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-primary font-heading text-xl font-bold text-white shadow-clay transition-all duration-150 hover:bg-primary-hover active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
+                style={{ width: "28%", height: "28%" }}
+              >
+                {spinning ? "Spinner…" : "Spinn"}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -326,6 +361,39 @@ function WheelSpinner({ wheelId, onBack }) {
             disabled={spinning}
           />
         </aside>
+      )}
+
+      {showWinnerModal && winner && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-4 animate-fade-in"
+          onClick={() => setShowWinnerModal(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-xl2 bg-surface p-8 text-center shadow-clay animate-modal-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="mb-2 font-body text-lg text-ink/60">Vinner</p>
+            <p className="mb-8 break-words font-heading text-4xl font-bold text-primary">
+              {winner.label}
+            </p>
+            <div className="flex flex-col gap-3">
+              <button
+                type="button"
+                onClick={() => handleRespin(false)}
+                className="flex min-h-touch cursor-pointer items-center justify-center gap-3 rounded-xl2 bg-primary px-6 py-3 font-heading text-lg font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97]"
+              >
+                Spinn på nytt
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRespin(true)}
+                className="flex min-h-touch cursor-pointer items-center justify-center gap-3 rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-all duration-150 hover:bg-ink/5 active:scale-[0.97]"
+              >
+                Fjern og spinn på nytt
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
