@@ -8,6 +8,7 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 - Added the underlying data storage for a new "Hjul" (wheel) picker module, letting the app remember wheel names, options, and spin-removal settings (UI for it lands in a later update).
 - Added the core wheel-spin logic (picking a winner, spin rotation, and slice colors) for the upcoming "Hjul" (wheel) picker module.
 - Added a sector editor for the upcoming "Hjul" (wheel) picker module, letting users add, remove, and bulk-import wheel options from pasted text.
+- Added a list view for the upcoming "Hjul" (wheel) picker module, letting users create, open, and delete wheels.
 - Stians game: Review phase now supports 50% credit and minus-point marks in addition to godkjent/ikke godkjent, and any group can be marked at any time instead of a fixed turn order — useful when several groups gave the same wrong answer.
 - Stians game: Scoreboard highlights the category column currently under review and previews pending points live as "forrige+endring" (e.g. "0+1") before the round is committed.
 
