@@ -224,61 +224,59 @@ function WheelSpinner({ wheelId, onBack }) {
         </div>
 
         <div className="flex w-full flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-center">
-          <div className="order-2 flex flex-col items-center gap-6 text-center lg:order-1 lg:items-start lg:text-left">
-            <div className="flex min-h-[64px] items-center justify-center lg:justify-start">
-              <span className="font-heading text-2xl font-bold text-primary">
-                {activeSectors.length < 2
-                  ? "Legg til minst to sektorer med tekst for å spinne"
-                  : winner
-                    ? winner.label
-                    : spinning
-                      ? "Snurrer…"
-                      : "Klar for å spinne?"}
-              </span>
+          {showEditor && (
+            <div className="order-2 flex flex-col items-center gap-6 text-center lg:order-1 lg:items-start lg:text-left">
+              <div className="flex min-h-[64px] items-center justify-center lg:justify-start">
+                <span className="font-heading text-2xl font-bold text-primary">
+                  {activeSectors.length < 2
+                    ? "Legg til minst to sektorer med tekst for å spinne"
+                    : winner
+                      ? winner.label
+                      : spinning
+                        ? "Snurrer…"
+                        : "Klar for å spinne?"}
+                </span>
+              </div>
+
+              <div className="flex flex-col items-center gap-4 lg:items-start">
+                <button
+                  type="button"
+                  onClick={spin}
+                  disabled={spinning || activeSectors.length < 2}
+                  className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 bg-primary px-8 py-3 font-heading text-xl font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
+                >
+                  {spinning ? "Spinner…" : "Spinn hjulet"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleUndo}
+                  disabled={spinning || removedIds.length === 0}
+                  className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-all duration-150 hover:bg-ink/5 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
+                >
+                  <Undo2 size={22} aria-hidden="true" />
+                  Angre
+                </button>
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-all duration-150 hover:bg-ink/5 active:scale-[0.97]"
+                >
+                  <RotateCcw size={22} aria-hidden="true" />
+                  Nullstill
+                </button>
+              </div>
+
+              <label className="flex cursor-pointer items-center gap-3 font-body text-lg text-ink">
+                <input
+                  type="checkbox"
+                  checked={wheel.removeAfterSpin}
+                  onChange={(e) => setWheelRemoveAfterSpin(wheelId, e.target.checked)}
+                  className="h-6 w-6 cursor-pointer accent-primary"
+                />
+                Fjern vinner etter spinn
+              </label>
             </div>
-
-            {showEditor && (
-              <>
-                <div className="flex flex-col items-center gap-4 lg:items-start">
-                  <button
-                    type="button"
-                    onClick={spin}
-                    disabled={spinning || activeSectors.length < 2}
-                    className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 bg-primary px-8 py-3 font-heading text-xl font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
-                  >
-                    {spinning ? "Spinner…" : "Spinn hjulet"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleUndo}
-                    disabled={spinning || removedIds.length === 0}
-                    className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-all duration-150 hover:bg-ink/5 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
-                  >
-                    <Undo2 size={22} aria-hidden="true" />
-                    Angre
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleReset}
-                    className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-all duration-150 hover:bg-ink/5 active:scale-[0.97]"
-                  >
-                    <RotateCcw size={22} aria-hidden="true" />
-                    Nullstill
-                  </button>
-                </div>
-
-                <label className="flex cursor-pointer items-center gap-3 font-body text-lg text-ink">
-                  <input
-                    type="checkbox"
-                    checked={wheel.removeAfterSpin}
-                    onChange={(e) => setWheelRemoveAfterSpin(wheelId, e.target.checked)}
-                    className="h-6 w-6 cursor-pointer accent-primary"
-                  />
-                  Fjern vinner etter spinn
-                </label>
-              </>
-            )}
-          </div>
+          )}
 
           <div
             className="relative order-1 shrink-0 lg:order-2"
@@ -365,7 +363,7 @@ function WheelSpinner({ wheelId, onBack }) {
 
       {showWinnerModal && winner && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-4 animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in"
           onClick={() => setShowWinnerModal(false)}
         >
           <div
