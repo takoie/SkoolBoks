@@ -5,13 +5,23 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 ## [Unreleased]
 
 ### Fixed
+- Stians game: Fixed React setState-during-render warning in writing-timer expiry handling.
+- Stians game: Winner announcement in ended phase now uses live region for screen reader consistency with other phases.
+- Stians game: Fixed reviewing-phase focus to prevent accidental approval on stray Enter key presses, and improved turn change announcements.
+- Stians game: Improved reviewing-phase accessibility with turn announcements, focus management, non-color status indicators, and group context labels.
+- Stians game: Fixed writing-phase timer to guard against invalid start/pause actions when time is already at zero, and added live region for letter display.
+- Stians game: Round config number inputs now commit on blur, and manual letter overrides reject non-letter characters. Minor accessibility improvements.
 - Stians game: Fixed numeric setters to correctly clamp zero values, deduplicate category lists, and prevent deadlock in empty reviews.
 - Timer display now correctly clamps custom duration field values to match the applied timer duration.
+- Stians game: Category bank deletions now stay in sync with active game categories, and category toggles display as pressed.
 
 ### Changed
 - Documented dev vs start scripts and build commands in README.
 
 ### Added
+- Stians game: Added the reviewing-phase turn order with per-group approval controls.
+- Stians game: Added the writing-phase countdown timer, with per-group "shout to stop" buttons and a manual stop control.
+- Stians game: Added a live scoreboard and idle-phase controls for drawing letters and starting rounds.
 - Stians game module is now navigable from the dashboard, with a Setup phase for adding groups and picking categories from the shared bank.
 - Persisted store state for the Stians game (groups, categories, letter draws, scoring config, review progress) and a shared category bank, not yet wired into the UI.
 - Core Stians game logic (letter drawing, review turn order, round scoring, and winner calculation), not yet wired into the UI.
