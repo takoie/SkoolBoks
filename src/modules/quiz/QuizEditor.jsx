@@ -90,7 +90,7 @@ function QuizEditor({ quizId, onDone }) {
   }
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="w-full">
       <div className="mb-6 flex flex-wrap items-center gap-4">
         <button
           type="button"

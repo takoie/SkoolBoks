@@ -4,8 +4,15 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 
 ## [Unreleased]
 
+### Added
+- Stians game: Review phase now supports 50% credit and minus-point marks in addition to godkjent/ikke godkjent, and any group can be marked at any time instead of a fixed turn order — useful when several groups gave the same wrong answer.
+- Stians game: Scoreboard highlights the category column currently under review and previews pending points live as "forrige+endring" (e.g. "0+1") before the round is committed.
+
 ### Changed
+- Stians game: The manual letter input is now masked (shown as dots) so the letter stays hidden until "Bruk" reveals it in the main display.
+- Updated changelog to document recent Stians game feature branch merge.
 - Merged Stians game feature branch with completed game mechanics, UI polish, and accessibility improvements.
+- Updated CHANGELOG.md with merged feature documentation.
 
 ### Fixed
 - Stians game: Fixed round letter persistence, added mid-round game exit, wired up team name editing with input validation.
@@ -35,6 +42,7 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 - Quiz-arena editor and player now show a friendly "quiz not found" message with a way back instead of a blank page, and the player plays a sound when a question is opened or a team's score changes.
 
 ### Added
+- Added `.gitignore` to exclude unnecessary files from version control and included the site hero image.
 - Added a custom title bar with logo, theme toggle, and window controls.
 - Added dark mode color tokens, with the app now defaulting to dark mode.
 - Theme preference is now persisted in settings and kept in sync with the app's dark/light appearance at runtime.

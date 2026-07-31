@@ -80,20 +80,23 @@ function Timer() {
   const isLastTenSeconds = remaining > 0 && remaining <= 10;
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
+    <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
       <h2 className="mb-8 font-heading text-3xl font-semibold text-ink">
         Nedtelling
       </h2>
 
       <div
-        className={`mb-8 flex min-h-[220px] w-full items-center justify-center rounded-xl2 border-2 bg-surface shadow-clay transition-colors ${
+        className={`mb-8 flex min-h-[220px] w-full items-center justify-center rounded-xl2 border-2 bg-surface shadow-clay transition-colors duration-300 ${
           isLastTenSeconds
-            ? "border-accent-coral animate-pulse"
+            ? "border-accent-coral animate-urgent"
             : "border-ink/10"
         }`}
       >
         <span
-          className="font-heading text-8xl font-bold text-primary"
+          key={remaining}
+          className={`font-heading text-8xl font-bold text-primary ${
+            isLastTenSeconds ? "animate-pop-in" : ""
+          }`}
           style={{ fontVariantNumeric: "tabular-nums" }}
         >
           {formatTime(remaining)}
@@ -139,7 +142,7 @@ function Timer() {
           type="button"
           onClick={() => setRunning((r) => !r)}
           disabled={remaining === 0}
-          className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 bg-primary px-8 py-3 font-heading text-xl font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 bg-primary px-8 py-3 font-heading text-xl font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
         >
           {running ? (
             <Pause size={24} aria-hidden="true" />

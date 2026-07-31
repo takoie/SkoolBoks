@@ -69,7 +69,7 @@ function Dashboard() {
   );
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="w-full">
       <h2 className="mb-2 font-heading text-3xl font-semibold text-ink">
         Velkommen til SkoolBox
       </h2>
@@ -90,7 +90,7 @@ function Dashboard() {
         </button>
       )}
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-6">
         {MODULES.map((m) => (
           <ModuleCard
             key={m.id}

@@ -5,7 +5,6 @@ import {
   NORWEGIAN_ALPHABET,
   pickLetter,
   pickRerollLetter,
-  getCurrentReviewGroupId,
   commitRound,
 } from "../lib/stiansGame";
 
@@ -48,6 +47,9 @@ export const useAppStore = create(
 
       setActiveClassId: (id) => set({ activeClassId: id }),
 
+      classSwitchGuard: null,
+      setClassSwitchGuard: (guard) => set({ classSwitchGuard: guard }),
+
       createClass: (name) => {
         const id = crypto.randomUUID();
         set((s) => ({
@@ -85,6 +87,14 @@ export const useAppStore = create(
           drawnStudents: {
             ...s.drawnStudents,
             [classId]: [...(s.drawnStudents[classId] ?? []), student],
+          },
+        })),
+
+      undoLastDraw: (classId) =>
+        set((s) => ({
+          drawnStudents: {
+            ...s.drawnStudents,
+            [classId]: (s.drawnStudents[classId] ?? []).slice(0, -1),
           },
         })),
 
@@ -286,18 +296,20 @@ export const useAppStore = create(
           };
         }),
 
-      markStiansApproval: (approved) =>
+      // mark is a point multiplier: 1 = godkjent, 0.5 = halv uttelling,
+      // 0 = ikke godkjent, -1 = minuspoeng. Any group can be marked at any
+      // time (no forced turn order), so groupId is explicit rather than
+      // inferred from whose "turn" it is.
+      markStiansApproval: (groupId, mark) =>
         set((s) => {
           const g = s.stiansGame;
           if (!g.review) return {};
           const category = g.categories[g.review.categoryIndex];
-          const currentGroupId = getCurrentReviewGroupId(g);
-          if (!currentGroupId) return {};
           const marks = {
             ...g.review.marks,
-            [currentGroupId]: {
-              ...g.review.marks[currentGroupId],
-              [category]: approved,
+            [groupId]: {
+              ...g.review.marks[groupId],
+              [category]: mark,
             },
           };
           const allMarked = g.review.groupOrder.every(

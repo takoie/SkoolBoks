@@ -2,16 +2,16 @@ function ModuleCard({ icon: Icon, title, description, accent = "primary", onClic
   const accentClasses = {
     primary: "bg-primary text-white",
     secondary: "bg-secondary text-white",
-    lime: "bg-accent-lime text-ink",
-    peach: "bg-accent-peach text-ink",
-    coral: "bg-accent-coral text-white",
+    lime: "bg-accent-lime text-accent-ink",
+    peach: "bg-accent-peach text-accent-ink",
+    coral: "bg-accent-coral text-accent-ink",
   };
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className="group flex min-h-[180px] cursor-pointer flex-col items-start gap-4 rounded-xl2 border-2 border-ink/10 bg-surface p-6 text-left shadow-clay transition-transform duration-200 ease-out hover:-translate-y-1 hover:border-primary/40 focus-visible:-translate-y-1"
+      className="group flex min-h-[180px] cursor-pointer flex-col items-start gap-4 rounded-xl2 border-2 border-ink/10 bg-surface p-6 text-left shadow-clay transition-all duration-200 ease-out hover:-translate-y-1 hover:border-primary/40 focus-visible:-translate-y-1 active:translate-y-0 active:scale-[0.98] active:duration-75"
     >
       <span
         className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl ${accentClasses[accent]}`}

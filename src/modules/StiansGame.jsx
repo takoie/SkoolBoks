@@ -5,11 +5,26 @@ import {
   getGroupTotal,
   getCurrentReviewGroupId,
   getWinner,
+  getMarkDelta,
 } from "../lib/stiansGame";
 import { playSound } from "../lib/sound";
 import { fireConfetti } from "../lib/confetti";
 
-function ScoreBoard({ groups, categories, scores }) {
+// While a category is being reviewed, its column is highlighted and each
+// group's cell previews the pending change as "previous+delta" (e.g. "0+1")
+// instead of jumping straight to the new total — scores only actually
+// commit once the whole round finishes.
+function formatLiveCell(prevPoints, mark, pointsPerRound) {
+  if (mark === undefined) return String(prevPoints);
+  const delta = getMarkDelta(pointsPerRound, mark);
+  if (delta === 0) return String(prevPoints);
+  const sign = delta > 0 ? "+" : "";
+  return `${prevPoints}${sign}${delta}`;
+}
+
+function ScoreBoard({ groups, categories, scores, review, pointsPerRound }) {
+  const reviewedCategory = review ? categories[review.categoryIndex] : null;
+
   return (
     <div className="mb-8 overflow-x-auto">
       <table className="w-full border-collapse overflow-hidden rounded-xl2 border-2 border-ink/10 shadow-clay">
@@ -25,7 +40,9 @@ function ScoreBoard({ groups, categories, scores }) {
               <th
                 key={cat}
                 scope="col"
-                className="border-2 border-ink/10 px-4 py-3 text-left font-heading text-base text-ink"
+                className={`border-2 border-ink/10 px-4 py-3 text-left font-heading text-base text-ink transition-colors ${
+                  cat === reviewedCategory ? "bg-primary/30" : ""
+                }`}
               >
                 {cat}
               </th>
@@ -46,14 +63,23 @@ function ScoreBoard({ groups, categories, scores }) {
                 <td className="border-2 border-ink/10 px-4 py-3 font-heading font-semibold text-ink">
                   {g.name}
                 </td>
-                {categories.map((cat) => (
-                  <td
-                    key={cat}
-                    className="border-2 border-ink/10 px-4 py-3 font-body text-lg text-ink"
-                  >
-                    {entry.byCategory[cat] ?? 0}
-                  </td>
-                ))}
+                {categories.map((cat) => {
+                  const mark = review?.marks[g.id]?.[cat];
+                  return (
+                    <td
+                      key={cat}
+                      className={`border-2 border-ink/10 px-4 py-3 font-body text-lg text-ink transition-colors ${
+                        cat === reviewedCategory ? "bg-primary/10" : ""
+                      }`}
+                    >
+                      {formatLiveCell(
+                        entry.byCategory[cat] ?? 0,
+                        mark,
+                        pointsPerRound
+                      )}
+                    </td>
+                  );
+                })}
                 <td className="border-2 border-ink/10 bg-accent-lime/10 px-4 py-3 font-heading text-lg font-bold text-ink">
                   {getGroupTotal(scores, g.id)}
                 </td>
@@ -146,13 +172,16 @@ function IdlePhase() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl text-center">
+    <div className="mx-auto max-w-5xl text-center">
       <div
         role="status"
         aria-live="polite"
         className="mb-8 flex min-h-[180px] w-full items-center justify-center rounded-xl2 border-2 border-ink/10 bg-surface shadow-clay"
       >
-        <span className="font-heading text-8xl font-bold text-primary">
+        <span
+          key={currentLetter ?? "none"}
+          className="inline-block animate-pop-in font-heading text-8xl font-bold text-primary"
+        >
           {currentLetter ?? "?"}
         </span>
       </div>
@@ -161,7 +190,7 @@ function IdlePhase() {
         <button
           type="button"
           onClick={drawStiansLetter}
-          className="min-h-touch cursor-pointer rounded-xl2 bg-primary px-6 py-3 font-heading text-lg font-semibold text-white transition-colors hover:bg-primary-hover"
+          className="min-h-touch cursor-pointer rounded-xl2 bg-primary px-6 py-3 font-heading text-lg font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97]"
         >
           Trekk bokstav
         </button>
@@ -169,19 +198,21 @@ function IdlePhase() {
           type="button"
           onClick={rerollStiansLetter}
           disabled={!currentLetter}
-          className="min-h-touch cursor-pointer rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-colors hover:bg-ink/5 disabled:cursor-not-allowed disabled:opacity-40"
+          className="min-h-touch cursor-pointer rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-all duration-150 hover:bg-ink/5 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
         >
           Trekk på nytt
         </button>
         <label className="flex items-center gap-2 font-body text-lg text-ink">
           Egen bokstav:
           <input
-            type="text"
+            type="password"
+            autoComplete="off"
             maxLength={1}
             value={manualDraft}
             onChange={(e) => setManualDraft(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleManualLetter()}
-            className="min-h-touch w-14 rounded-xl2 border-2 border-ink/10 bg-surface px-2 py-2 text-center font-body text-lg uppercase text-ink"
+            aria-label="Egen bokstav (skjult til du trykker Bruk)"
+            className="min-h-touch w-14 rounded-xl2 border-2 border-ink/10 bg-surface px-2 py-2 text-center font-body text-lg text-ink"
           />
           <button
             type="button"
@@ -241,7 +272,7 @@ function IdlePhase() {
           type="button"
           onClick={startStiansWriting}
           disabled={!currentLetter}
-          className="min-h-touch cursor-pointer rounded-xl2 bg-primary px-8 py-3 font-heading text-xl font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-40"
+          className="min-h-touch cursor-pointer rounded-xl2 bg-primary px-8 py-3 font-heading text-xl font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
         >
           Start skriving
         </button>
@@ -303,7 +334,7 @@ function SetupPhase() {
   const canStart = groups.length >= 2 && categories.length >= 1;
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-6xl">
       <h2 className="mb-2 font-heading text-3xl font-semibold text-ink">
         Stians game — oppsett
       </h2>
@@ -510,7 +541,7 @@ function WritingPhase() {
   const ss = (remaining % 60).toString().padStart(2, "0");
 
   return (
-    <div className="mx-auto max-w-3xl text-center">
+    <div className="mx-auto max-w-4xl text-center">
       <div
         role="status"
         aria-live="polite"
@@ -526,7 +557,9 @@ function WritingPhase() {
       </p>
 
       <div
-        className="mb-6 font-heading text-5xl font-bold text-ink"
+        className={`mb-6 font-heading text-5xl font-bold ${
+          remaining > 0 && remaining <= 10 ? "text-accent-coral-ink" : "text-ink"
+        }`}
         style={{ fontVariantNumeric: "tabular-nums" }}
       >
         {mm}:{ss}
@@ -537,7 +570,7 @@ function WritingPhase() {
           type="button"
           onClick={() => setRunning((r) => !r)}
           disabled={remaining === 0}
-          className="min-h-touch cursor-pointer rounded-xl2 bg-primary px-6 py-3 font-heading text-lg font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-40"
+          className="min-h-touch cursor-pointer rounded-xl2 bg-primary px-6 py-3 font-heading text-lg font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
         >
           {running ? "Pause" : "Start tid"}
         </button>
@@ -577,94 +610,141 @@ function WritingPhase() {
   );
 }
 
+// mark is a point multiplier. Every group's buttons stay active for the
+// whole category (no forced turn order), so several groups that gave the
+// same answer can be marked in quick succession instead of waiting for
+// each other's "turn".
+const MARK_OPTIONS = [
+  {
+    mark: 1,
+    short: "✓ Godkjent",
+    label: "Godkjent",
+    idle: "border-accent-lime/40 text-ink hover:bg-accent-lime/20",
+    active: "border-accent-lime bg-accent-lime/80 text-accent-ink",
+  },
+  {
+    mark: 0.5,
+    short: "½ 50%",
+    label: "50% riktig",
+    idle: "border-accent-peach/50 text-ink hover:bg-accent-peach/20",
+    active: "border-accent-peach bg-accent-peach/80 text-accent-ink",
+  },
+  {
+    mark: 0,
+    short: "✗ Ikke godkjent",
+    label: "Ikke godkjent",
+    idle: "border-destructive/30 text-ink hover:bg-destructive/10",
+    active: "border-destructive bg-destructive/80 text-white",
+  },
+  {
+    mark: -1,
+    short: "− Minus",
+    label: "Minuspoeng",
+    idle: "border-ink/20 text-ink hover:bg-ink/10",
+    active: "border-ink bg-ink text-canvas",
+  },
+];
+
+function markBadge(mark) {
+  const option = MARK_OPTIONS.find((o) => o.mark === mark);
+  if (!option) return null;
+  const colorClass =
+    mark === 1
+      ? "text-accent-lime-ink"
+      : mark === 0.5
+        ? "text-accent-peach-ink"
+        : mark === 0
+          ? "text-destructive"
+          : "text-ink";
+  return (
+    <span className={`font-heading font-semibold ${colorClass}`}>
+      {option.label}
+    </span>
+  );
+}
+
 function ReviewingPhase() {
   const stiansGame = useAppStore((s) => s.stiansGame);
   const markStiansApproval = useAppStore((s) => s.markStiansApproval);
   const endStiansGame = useAppStore((s) => s.endStiansGame);
   const { review, categories, groups, leadGroupId } = stiansGame;
-  const currentRowRef = useRef(null);
+  const nextRowRef = useRef(null);
 
   const category = review ? categories[review.categoryIndex] : null;
-  const currentGroupId = review ? getCurrentReviewGroupId(stiansGame) : null;
-  const currentGroupName = review
-    ? groups.find((g) => g.id === currentGroupId)?.name
-    : null;
+  const nextGroupId = review ? getCurrentReviewGroupId(stiansGame) : null;
 
   useEffect(() => {
-    // Focus the row itself (not the approve button) so a stray Enter/Space
-    // right after a phase transition can't silently approve an unreviewed answer.
-    currentRowRef.current?.focus();
-  }, [currentGroupId, category]);
+    // Focus the next-up row (not a button) so a stray Enter/Space right
+    // after a phase transition can't silently mark an unreviewed answer.
+    nextRowRef.current?.focus();
+  }, [nextGroupId, category]);
 
   if (!review) return null;
   const groupsById = Object.fromEntries(groups.map((g) => [g.id, g]));
+  const remaining = review.groupOrder.filter(
+    (id) => review.marks[id]?.[category] === undefined
+  ).length;
 
   return (
-    <div className="mx-auto max-w-3xl text-center">
+    <div className="mx-auto max-w-4xl text-center">
       <div role="status" aria-live="polite">
         <p className="mb-2 font-body text-lg text-ink/70">
           Kategori {review.categoryIndex + 1} av {categories.length}
         </p>
-        <h3 className="mb-6 font-heading text-4xl font-bold text-ink">
+        <h3 className="mb-2 font-heading text-4xl font-bold text-ink">
           {category}
         </h3>
-        <p className="sr-only">{currentGroupName} sin tur</p>
+        <p className="sr-only">
+          {remaining} av {review.groupOrder.length} grupper gjenstår
+        </p>
       </div>
+      <p className="mb-6 text-base text-ink/60">
+        Klikk direkte på en gruppe for å vurdere den — ingen fast rekkefølge.
+      </p>
 
       <div className="mb-8 flex flex-col items-center gap-3">
         {review.groupOrder.map((groupId) => {
           const group = groupsById[groupId];
           const mark = review.marks[groupId]?.[category];
-          const isCurrent = groupId === currentGroupId;
+          const isNext = groupId === nextGroupId;
           return (
             <div
               key={groupId}
-              ref={isCurrent ? currentRowRef : null}
-              tabIndex={isCurrent ? -1 : undefined}
-              aria-current={isCurrent ? "true" : undefined}
-              className={`flex w-full max-w-md items-center justify-between gap-4 rounded-xl2 border-2 px-5 py-3 shadow-clay transition-colors ${
-                isCurrent
+              ref={isNext ? nextRowRef : null}
+              tabIndex={isNext ? -1 : undefined}
+              aria-current={isNext ? "true" : undefined}
+              className={`flex w-full max-w-lg flex-col gap-3 rounded-xl2 border-2 px-5 py-3 shadow-clay transition-colors ${
+                isNext
                   ? "border-primary bg-primary/10"
                   : mark === undefined
-                    ? "border-ink/10 bg-surface opacity-50"
+                    ? "border-ink/10 bg-surface opacity-70"
                     : "border-ink/10 bg-surface"
               }`}
             >
-              <span className="font-heading text-xl font-semibold text-ink">
-                {isCurrent && "▶ "}
-                {group?.name}
-                {groupId === leadGroupId && " 📣"}
-              </span>
-              {mark === true && (
-                <span className="font-heading font-semibold text-accent-lime">
-                  Godkjent
+              <div className="flex items-center justify-between gap-4">
+                <span className="font-heading text-xl font-semibold text-ink">
+                  {isNext && "▶ "}
+                  {group?.name}
+                  {groupId === leadGroupId && " 📣"}
                 </span>
-              )}
-              {mark === false && (
-                <span className="font-heading font-semibold text-destructive">
-                  Ikke godkjent
-                </span>
-              )}
-              {isCurrent && (
-                <div className="flex gap-2">
+                {markBadge(mark)}
+              </div>
+              <div className="flex flex-wrap justify-center gap-2">
+                {MARK_OPTIONS.map((option) => (
                   <button
+                    key={option.mark}
                     type="button"
-                    onClick={() => markStiansApproval(true)}
-                    aria-label={`Godkjent for ${group?.name}`}
-                    className="min-h-touch cursor-pointer rounded-xl2 bg-accent-lime/80 px-5 py-2 font-heading font-semibold text-ink transition-colors hover:bg-accent-lime"
+                    onClick={() => markStiansApproval(groupId, option.mark)}
+                    aria-label={`${option.label} for ${group?.name}`}
+                    aria-pressed={mark === option.mark}
+                    className={`min-h-touch cursor-pointer rounded-xl2 border-2 px-4 py-2 font-heading text-sm font-semibold transition-colors ${
+                      mark === option.mark ? option.active : option.idle
+                    }`}
                   >
-                    Godkjent
+                    {option.short}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => markStiansApproval(false)}
-                    aria-label={`Ikke godkjent for ${group?.name}`}
-                    className="min-h-touch cursor-pointer rounded-xl2 bg-destructive/80 px-5 py-2 font-heading font-semibold text-white transition-colors hover:bg-destructive"
-                  >
-                    Ikke godkjent
-                  </button>
-                </div>
-              )}
+                ))}
+              </div>
             </div>
           );
         })}
@@ -694,11 +774,11 @@ function EndedPhase() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-2xl text-center">
+    <div className="mx-auto max-w-3xl text-center">
       <h3
         role="status"
         aria-live="polite"
-        className="mb-4 font-heading text-4xl font-bold text-primary"
+        className="mb-4 animate-pop-in font-heading text-4xl font-bold text-primary"
       >
         {winner ? `${winner.name} vinner! 🎉` : "Spillet er over"}
       </h3>
@@ -727,15 +807,23 @@ function StiansGame() {
   const groups = useAppStore((s) => s.stiansGame.groups);
   const categories = useAppStore((s) => s.stiansGame.categories);
   const scores = useAppStore((s) => s.stiansGame.scores);
+  const review = useAppStore((s) => s.stiansGame.review);
+  const pointsPerRound = useAppStore((s) => s.stiansGame.pointsPerRound);
 
   if (phase === "setup") return <SetupPhase />;
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="w-full">
       <h2 className="mb-6 text-center font-heading text-3xl font-semibold text-ink">
         Stians game
       </h2>
-      <ScoreBoard groups={groups} categories={categories} scores={scores} />
+      <ScoreBoard
+        groups={groups}
+        categories={categories}
+        scores={scores}
+        review={review}
+        pointsPerRound={pointsPerRound}
+      />
       {phase === "idle" && <IdlePhase />}
       {phase === "writing" && <WritingPhase />}
       {phase === "reviewing" && <ReviewingPhase />}

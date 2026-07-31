@@ -53,7 +53,7 @@ function DiceRoller() {
   const sum = values?.reduce((a, b) => a + b, 0) ?? null;
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
+    <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
       <h2 className="mb-2 font-heading text-3xl font-semibold text-ink">
         Terningkast
       </h2>
@@ -107,8 +107,10 @@ function DiceRoller() {
         {values ? (
           values.map((v, i) => (
             <span
-              key={i}
-              className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 font-heading text-3xl font-bold text-primary"
+              key={`${i}-${v}`}
+              className={`flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 font-heading text-3xl font-bold text-primary ${
+                rolling ? "animate-fade-in" : "animate-pop-in"
+              }`}
             >
               {v}
             </span>
@@ -130,7 +132,7 @@ function DiceRoller() {
         type="button"
         onClick={roll}
         disabled={rolling}
-        className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 bg-primary px-8 py-3 font-heading text-xl font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 bg-primary px-8 py-3 font-heading text-xl font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
       >
         <Dice5 size={26} aria-hidden="true" />
         {rolling ? "Kaster…" : "Kast"}

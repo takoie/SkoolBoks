@@ -96,7 +96,7 @@ function QuizPlayer({ quizId, onDone }) {
     : null;
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="w-full">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <button
@@ -156,10 +156,10 @@ function QuizPlayer({ quizId, onDone }) {
                 type="button"
                 disabled={used}
                 onClick={() => openCell(cat.id, point.id)}
-                className={`min-h-[100px] cursor-pointer rounded-xl2 border-2 font-heading text-3xl font-bold shadow-clay transition-all ${
+                className={`min-h-[100px] cursor-pointer rounded-xl2 border-2 font-heading text-3xl font-bold shadow-clay transition-all duration-200 ease-out ${
                   used
                     ? "cursor-not-allowed border-ink/5 bg-ink/5 text-ink/20"
-                    : "border-secondary/30 bg-secondary/10 text-secondary hover:-translate-y-1 hover:bg-secondary/20"
+                    : "border-secondary/30 bg-secondary/10 text-secondary hover:-translate-y-1 hover:bg-secondary/20 active:translate-y-0 active:scale-[0.96] active:duration-75"
                 }`}
               >
                 {used ? "" : point.value}
@@ -170,8 +170,8 @@ function QuizPlayer({ quizId, onDone }) {
       </div>
 
       {activeCell && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 p-6">
-          <div className="w-full max-w-2xl rounded-xl2 bg-surface p-8 shadow-clay">
+        <div className="fixed inset-0 z-50 flex animate-fade-in items-center justify-center bg-ink/60 p-6">
+          <div className="w-full max-w-2xl animate-modal-in rounded-xl2 bg-surface p-8 shadow-clay">
             <div className="mb-4 flex items-start justify-between gap-4">
               <h3 className="font-heading text-2xl font-semibold text-ink">
                 {activeCategory.name} — {activePoint.value} poeng

@@ -30,21 +30,26 @@ export function getCurrentReviewGroupId(stiansGame) {
   );
 }
 
+// A mark is a multiplier of pointsPerRound: 1 = godkjent, 0.5 = halv
+// uttelling, 0 = ikke godkjent, -1 = minuspoeng.
+export function getMarkDelta(pointsPerRound, mark) {
+  return typeof mark === "number" ? pointsPerRound * mark : 0;
+}
+
 // Folds the finished review's marks into cumulative scores, applying
-// pointsPerRound per approved category and the bonus (if enabled) to the
-// lead group. Returns a new stiansGame object with phase reset to "idle".
+// pointsPerRound (scaled by each mark) per category and the bonus (if
+// enabled) to the lead group. Returns a new stiansGame object with phase
+// reset to "idle".
 export function commitRound(stiansGame) {
   const scores = {};
   stiansGame.groups.forEach((group) => {
     const prev = stiansGame.scores[group.id] ?? { byCategory: {}, bonus: 0 };
     const byCategory = { ...prev.byCategory };
     stiansGame.categories.forEach((category) => {
-      const approved =
-        stiansGame.review.marks[group.id]?.[category] === true;
+      const mark = stiansGame.review.marks[group.id]?.[category];
       const current = byCategory[category] ?? 0;
-      byCategory[category] = approved
-        ? current + stiansGame.pointsPerRound
-        : current;
+      byCategory[category] =
+        current + getMarkDelta(stiansGame.pointsPerRound, mark);
     });
     let bonus = prev.bonus;
     if (stiansGame.bonusEnabled && stiansGame.leadGroupId === group.id) {

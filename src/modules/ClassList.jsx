@@ -46,7 +46,7 @@ function ClassList() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-6xl">
       <h2 className="mb-6 font-heading text-3xl font-semibold text-ink">
         Klasseliste
       </h2>
