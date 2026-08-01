@@ -2,11 +2,15 @@ import {
   Dices,
   Trophy,
   Timer as TimerIcon,
-  Users,
   Hash,
   Dice5,
   Puzzle,
   CircleDot,
+  Grid3x3,
+  Drama,
+  Bomb,
+  Skull,
+  Feather,
 } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import ModuleCard from "../components/ModuleCard";
@@ -17,7 +21,7 @@ const MODULES = [
     id: "spinwheel",
     icon: Dices,
     title: "Elevtrekker",
-    description: "Trekk en tilfeldig elev fra klasselisten.",
+    description: "Trekk et tilfeldig navn fra navnelisten.",
     accent: "coral",
   },
   {
@@ -33,13 +37,6 @@ const MODULES = [
     title: "Nedtelling",
     description: "Visuell timer med alarm.",
     accent: "lime",
-  },
-  {
-    id: "classlist",
-    icon: Users,
-    title: "Klasseliste",
-    description: "Legg inn og administrer elevlister.",
-    accent: "primary",
   },
   {
     id: "nearestthousand",
@@ -70,6 +67,41 @@ const MODULES = [
     description: "Lag og spinn egne hjul med valgfrie sektorer.",
     accent: "lime",
   },
+  {
+    id: "gjette",
+    icon: Grid3x3,
+    title: "GjettE",
+    description: "Gjett dagens ord — bokmål, nynorsk eller engelsk.",
+    accent: "secondary",
+  },
+  {
+    id: "tofakta",
+    icon: Drama,
+    title: "2+1 fake",
+    description: "To sanne påstander og én løgn — la klassen gjette.",
+    accent: "coral",
+  },
+  {
+    id: "bomb",
+    icon: Bomb,
+    title: "Send bomben",
+    description: "Nedtelling, ord og en bombe som går av.",
+    accent: "coral",
+  },
+  {
+    id: "hangman",
+    icon: Skull,
+    title: "Hangman",
+    description: "Klassisk hangman — tilfeldig ord eller gamehost-modus.",
+    accent: "secondary",
+  },
+  {
+    id: "adjektivfortelling",
+    icon: Feather,
+    title: "Adjektivfortelling",
+    description: "Fyll inn adjektiv, substantiv og verb — les historien sammen etterpå.",
+    accent: "peach",
+  },
 ];
 
 function Dashboard() {
@@ -80,11 +112,6 @@ function Dashboard() {
 
   return (
     <div className="w-full">
-      <h2 className="mb-2 font-heading text-3xl font-semibold text-ink">
-        Velkommen til SkoolBox
-      </h2>
-      <p className="mb-8 text-lg text-ink/70">Velg et verktøy for timen.</p>
-
       {activeClass.students.length === 0 && (
         <button
           type="button"
@@ -92,10 +119,10 @@ function Dashboard() {
           className="mb-8 flex w-full cursor-pointer items-center justify-between rounded-xl2 border-2 border-dashed border-primary/40 bg-primary/5 px-6 py-4 text-left transition-colors hover:bg-primary/10"
         >
           <span className="font-body text-lg text-ink">
-            Klasselisten din er tom — legg til elever for å bruke Elevtrekker.
+            Navnelisten din er tom — legg til navn for å bruke Elevtrekker.
           </span>
           <span className="font-heading font-semibold text-primary">
-            Gå til Klasseliste →
+            Gå til Navnelister →
           </span>
         </button>
       )}

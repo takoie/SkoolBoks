@@ -12,6 +12,11 @@ import NearestThousand from "./modules/NearestThousand";
 import DiceRoller from "./modules/DiceRoller";
 import StiansGame from "./modules/StiansGame";
 import WheelArena from "./modules/wheel/WheelArena";
+import GjetteArena from "./modules/gjette/GjetteArena";
+import TofaktaArena from "./modules/tofakta/TofaktaArena";
+import BombArena from "./modules/bomb/BombArena";
+import HangmanArena from "./modules/hangman/HangmanArena";
+import AdjektivfortellingArena from "./modules/adjektivfortelling/AdjektivfortellingArena";
 
 const MODULE_COMPONENTS = {
   dashboard: Dashboard,
@@ -23,6 +28,11 @@ const MODULE_COMPONENTS = {
   dice: DiceRoller,
   stiansgame: StiansGame,
   wheel: WheelArena,
+  gjette: GjetteArena,
+  tofakta: TofaktaArena,
+  bomb: BombArena,
+  hangman: HangmanArena,
+  adjektivfortelling: AdjektivfortellingArena,
 };
 
 function App() {
