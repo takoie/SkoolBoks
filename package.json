@@ -10,7 +10,8 @@
     "build": "tauri build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "signer:generate": "tauri signer generate -w ./src-tauri/updater.key"
+    "signer:generate": "tauri signer generate -w ./src-tauri/updater.key",
+    "release:manifest": "node scripts/generate-latest-json.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

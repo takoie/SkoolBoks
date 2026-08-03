@@ -5,6 +5,8 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 ## [Unreleased]
 
 ### Added
+- Six new game modules (Bomb, Hangman, Gjette, ToFakta, Gangemester, NoiseMeter) and ClassList editor/overview, plus Windows production build with auto-updates via Tauri installer and updater plugin.
+- Production Windows build configuration with NSIS installer, pre/post-install cleanup hooks, and automatic GitHub-hosted updates via tauri-plugin-updater with UpdateChecker UI.
 - Adjektivfortelling module registration in App.jsx and Dashboard component for full dashboard and routing integration.
 - New "Støymeter" module: team-based noise competition using the Web Audio API to measure peak microphone loudness over a timed round, with team setup, a visual countdown ("Gjør dere klare... 3, 2, 1, BRÅK!"), a live reactive volume bar, and a final scoreboard crowning the loudest team.
 - Adjektivfortelling module now accessible from the dashboard with routing integration.

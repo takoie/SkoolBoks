@@ -30,7 +30,7 @@ dist-ssr
 *.sw?
 graphify-out/
 .claude/
-docs/
+docs/*
 CLAUDE.md
 README.md
 
