@@ -1,12 +1,22 @@
 import { useRef } from "react";
 import { ArrowLeft, Play } from "lucide-react";
 import { useAppStore } from "../../store/useAppStore";
-import { WORD_TYPES, parseSlots, insertMarker } from "../../lib/adjectiveStory";
+import {
+  WORD_TYPES,
+  TYPE_COLORS,
+  parseSlots,
+  insertMarker,
+  splitMarkerSegments,
+} from "../../lib/adjectiveStory";
+
+const EDITOR_BOX_CLASSES =
+  "w-full rounded-xl2 border-2 p-4 font-body text-lg leading-relaxed";
 
 function StoryEditor({ storyId, onBack, onCollect }) {
   const story = useAppStore((s) => s.adjectiveStories[storyId]);
   const updateAdjectiveStory = useAppStore((s) => s.updateAdjectiveStory);
   const textareaRef = useRef(null);
+  const backdropRef = useRef(null);
 
   if (!story) return null;
 
@@ -26,6 +36,13 @@ function StoryEditor({ storyId, onBack, onCollect }) {
       el?.focus();
       el?.setSelectionRange(newPos, newPos);
     });
+  }
+
+  function handleScroll(e) {
+    if (backdropRef.current) {
+      backdropRef.current.scrollTop = e.target.scrollTop;
+      backdropRef.current.scrollLeft = e.target.scrollLeft;
+    }
   }
 
   return (
@@ -68,14 +85,41 @@ function StoryEditor({ storyId, onBack, onCollect }) {
         ))}
       </div>
 
-      <textarea
-        ref={textareaRef}
-        value={story.text}
-        onChange={(e) => updateAdjectiveStory(storyId, { text: e.target.value })}
-        rows={14}
-        placeholder="Skriv eller lim inn historien her, og bruk knappene over for å sette inn ord-plassholdere der ordklassen skal mangle."
-        className="w-full rounded-xl2 border-2 border-ink/10 bg-surface p-4 font-body text-lg leading-relaxed text-ink outline-none transition-colors focus:border-primary/40"
-      />
+      <div className="relative rounded-xl2 border-2 border-ink/10 bg-surface transition-colors focus-within:border-primary/40">
+        <div
+          ref={backdropRef}
+          aria-hidden="true"
+          className={`${EDITOR_BOX_CLASSES} pointer-events-none h-80 overflow-auto whitespace-pre-wrap break-words text-ink`}
+        >
+          {story.text
+            ? splitMarkerSegments(story.text).map((seg, i) =>
+                seg.type ? (
+                  <span
+                    key={i}
+                    className={`rounded font-semibold ${TYPE_COLORS[seg.type].bg} ${TYPE_COLORS[seg.type].text}`}
+                  >
+                    {seg.text}
+                  </span>
+                ) : (
+                  <span key={i}>{seg.text}</span>
+                )
+              )
+            : null}
+          {/* Trailing space so a newline at the very end still contributes height */}
+          {story.text.endsWith("\n") && " "}
+        </div>
+        <textarea
+          ref={textareaRef}
+          value={story.text}
+          onChange={(e) => updateAdjectiveStory(storyId, { text: e.target.value })}
+          onScroll={handleScroll}
+          spellCheck={false}
+          autoCorrect="off"
+          autoCapitalize="off"
+          placeholder="Skriv eller lim inn historien her, og bruk knappene over for å sette inn ord-plassholdere der ordklassen skal mangle."
+          className={`${EDITOR_BOX_CLASSES} absolute inset-0 h-80 resize-none overflow-auto border-transparent bg-transparent text-transparent caret-ink outline-none placeholder:text-ink/40`}
+        />
+      </div>
 
       <p className="mt-3 text-base text-ink/60">
         {slots.length === 0

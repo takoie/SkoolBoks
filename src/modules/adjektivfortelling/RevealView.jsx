@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { ArrowLeft, ChevronRight, Rows3, Maximize } from "lucide-react";
-import { splitIntoLines, renderSegments } from "../../lib/adjectiveStory";
+import { splitIntoLines, renderSegments, TYPE_COLORS } from "../../lib/adjectiveStory";
 
 function Segments({ segments }) {
   return segments.map((seg, i) =>
     seg.isAnswer ? (
-      <span key={i} className="font-semibold text-primary">
+      <span
+        key={i}
+        className={`rounded font-semibold ${TYPE_COLORS[seg.type].bg} ${TYPE_COLORS[seg.type].text}`}
+      >
         {seg.text}
       </span>
     ) : (
@@ -15,19 +18,57 @@ function Segments({ segments }) {
 }
 
 function RevealView({ story, answers, onBack }) {
-  const [mode, setMode] = useState("lines");
+  const [mode, setMode] = useState(null);
   const [lineIndex, setLineIndex] = useState(0);
 
   const lines = splitIntoLines(story.text);
   const isLastLine = lineIndex >= lines.length - 1;
+
+  if (!mode) {
+    return (
+      <div className="relative mx-auto flex min-h-[60vh] w-full max-w-3xl flex-col items-center justify-center gap-8 text-center">
+        <button
+          type="button"
+          onClick={onBack}
+          aria-label="Tilbake til redigering"
+          className="absolute left-0 top-0 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-ink/70 transition-colors hover:bg-ink/10"
+        >
+          <ArrowLeft size={22} aria-hidden="true" />
+        </button>
+
+        <h2 className="font-heading text-3xl font-semibold text-ink">
+          Hvordan vil du vise «{story.title}»?
+        </h2>
+
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <button
+            type="button"
+            onClick={() => setMode("lines")}
+            className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 bg-primary px-8 py-5 font-heading text-xl font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97]"
+          >
+            <Rows3 size={24} aria-hidden="true" />
+            Linje for linje
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("fullscreen")}
+            className="flex min-h-touch cursor-pointer items-center gap-3 rounded-xl2 bg-primary px-8 py-5 font-heading text-xl font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97]"
+          >
+            <Maximize size={24} aria-hidden="true" />
+            Fullskjerm
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8">
       <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"
-          onClick={onBack}
-          aria-label="Tilbake til redigering"
+          onClick={() => setMode(null)}
+          aria-label="Tilbake til visningsvalg"
           className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-ink/70 transition-colors hover:bg-ink/10"
         >
           <ArrowLeft size={22} aria-hidden="true" />

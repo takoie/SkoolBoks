@@ -2,11 +2,11 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "SkoolBox",
   "version": "0.1.0",
-  "identifier": "com.skoolbox.app",
+  "identifier": "com.skoolbox.desktop",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "npm run build",
+    "beforeBuildCommand": "npm run build:frontend",
     "frontendDist": "../dist"
   },
   "app": {
@@ -23,18 +23,42 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": null,
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["$APPDATA/tofakta-images/**"]
+      }
     }
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis", "msi"],
+    "targets": ["nsis"],
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser",
+        "displayLanguageSelector": false,
+        "languages": ["English"],
+        "compression": "lzma",
+        "installerHooks": "installer-hooks.nsh"
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://github.com/takoie/SkoolBox/releases/latest/download/latest.json"
+      ],
+      "dialog": false,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDlFOEY0QjhFNDRCRUFEOQpSV1RaNmt2a3VQVG9DV0xkRnNtWUIwZWxFM0FRZjVHQU40ZWs0Q3dNTW1uRU5LVG95aUJ0VEZaYwo="
+    }
   }
 }

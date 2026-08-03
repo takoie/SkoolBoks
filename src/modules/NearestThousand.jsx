@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
-import { Eye, Hash, RotateCcw } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Eye, Hash, Info, RotateCcw, X } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { playSound } from "../lib/sound";
 import { findClosestArrangement } from "../lib/nearestThousand";
@@ -7,8 +8,8 @@ import { findClosestArrangement } from "../lib/nearestThousand";
 const TOTAL_ROUNDS = 9;
 const ROLL_STEPS = 12;
 const ROLL_BASE_DELAY = 70;
-// How long the landed digit stays big on screen before it slides into the
-// results bar below - gives students at the back of the room time to read it.
+// How long after landing before the digit is added to the results bar below
+// - the digit itself keeps showing on the die until the next roll starts.
 const SETTLE_DELAY = 600;
 
 function NearestThousand() {
@@ -23,6 +24,7 @@ function NearestThousand() {
   const [rolling, setRolling] = useState(false);
   const [rollDigit, setRollDigit] = useState(null);
   const [showFasit, setShowFasit] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
   // Bumped on reset so any in-flight roll timeouts recognize they're stale
   // and stop touching state after the user resets mid-animation.
   const rollTokenRef = useRef(0);
@@ -50,7 +52,6 @@ function NearestThousand() {
         drawsRef.current = next;
         setDraws(next);
         setRolling(false);
-        setRollDigit(null);
       }, SETTLE_DELAY);
     };
 
@@ -85,13 +86,55 @@ function NearestThousand() {
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col items-center text-center">
-      <h2 className="mb-2 font-heading text-3xl font-semibold text-ink">
-        Nærmest tusen
-      </h2>
+      <div className="mb-2 flex items-center justify-center gap-2">
+        <h2 className="font-heading text-3xl font-semibold text-ink">
+          Nærmest tusen
+        </h2>
+        <button
+          type="button"
+          onClick={() => setShowInfo(true)}
+          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-ink/50 transition-all duration-150 hover:bg-ink/10 active:scale-90"
+          aria-label="Hvordan spillet fungerer"
+        >
+          <Info size={20} aria-hidden="true" />
+        </button>
+      </div>
       <p className="mb-8 text-lg text-ink/70">
-        Kast {draws.length} av {TOTAL_ROUNDS} — bygg et 3×3-rutenett med tre
-        tresifrede tall som kommer nærmest 1000.
+        Kast {draws.length} av {TOTAL_ROUNDS}
       </p>
+
+      {showInfo &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in"
+            onClick={() => setShowInfo(false)}
+          >
+            <div
+              className="relative w-full max-w-md rounded-xl2 bg-surface p-8 text-left shadow-clay animate-modal-in"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setShowInfo(false)}
+                className="absolute right-4 top-4 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-ink/50 transition-colors hover:bg-ink/10"
+                aria-label="Lukk"
+              >
+                <X size={18} aria-hidden="true" />
+              </button>
+
+              <h3 className="mb-4 font-heading text-xl font-semibold text-ink">
+                Slik spilles Nærmest tusen
+              </h3>
+              <p className="font-body text-base text-ink/80">
+                Lag et 3×3 rutenett. Når tallet vises så må det plasseres
+                raskt før neste tall kommer. Når alle sifrene er skrevet inn
+                i rutenettet så adderes tallene nedover. De som er nærmest
+                1000 (over og under) vinner!
+              </p>
+            </div>
+          </div>,
+          document.body
+        )}
 
       <div className="mb-8 flex h-64 w-64 items-center justify-center rounded-[2.5rem] border-4 border-primary/30 bg-surface shadow-clay sm:h-72 sm:w-72">
         {rollDigit !== null ? (

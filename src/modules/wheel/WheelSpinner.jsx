@@ -59,7 +59,7 @@ function sectorLabelTransform(index, total) {
 // stretch before landing drags out noticeably, which is what makes the
 // finish feel suspenseful instead of just linearly slowing down.
 function easeOutQuint(t) {
-  return 1 - Math.pow(1 - t, 5);
+  return 1 - Math.pow(1 - t, 4.3);
 }
 
 function WheelSpinner({ wheelId, onBack }) {
@@ -68,6 +68,7 @@ function WheelSpinner({ wheelId, onBack }) {
     (s) => s.removedSectors[wheelId] ?? EMPTY_REMOVED_IDS
   );
   const setWheelSectors = useAppStore((s) => s.setWheelSectors);
+  const renameWheel = useAppStore((s) => s.renameWheel);
   const setWheelRemoveAfterSpin = useAppStore((s) => s.setWheelRemoveAfterSpin);
   const markSectorRemoved = useAppStore((s) => s.markSectorRemoved);
   const undoLastSectorRemoval = useAppStore((s) => s.undoLastSectorRemoval);
@@ -83,6 +84,11 @@ function WheelSpinner({ wheelId, onBack }) {
   const [showEditor, setShowEditor] = useState(true);
   const [showWinnerModal, setShowWinnerModal] = useState(false);
   const [respinTrigger, setRespinTrigger] = useState(0);
+  const [nameDraft, setNameDraft] = useState(wheel.name);
+
+  useEffect(() => {
+    setNameDraft(wheel.name);
+  }, [wheel.id, wheel.name]);
 
   const activeSectors = useMemo(
     () =>
@@ -126,7 +132,7 @@ function WheelSpinner({ wheelId, onBack }) {
       landingOffset
     );
     const deltaDeg = targetRotation - startRotation;
-    const duration = 5500;
+    const duration = 7500;
 
     const prefersReduced = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
@@ -195,8 +201,8 @@ function WheelSpinner({ wheelId, onBack }) {
 
   return (
     <div
-      className={`mx-auto flex w-full flex-col gap-8 lg:flex-row lg:items-start ${
-        showEditor ? "max-w-7xl" : "max-w-[1600px]"
+      className={`flex w-full flex-col gap-8 lg:flex-row lg:items-start ${
+        showEditor ? "" : "mx-auto max-w-[1600px]"
       }`}
     >
       <div className="flex flex-1 flex-col items-center text-center">
@@ -209,7 +215,15 @@ function WheelSpinner({ wheelId, onBack }) {
           >
             <ArrowLeft size={22} aria-hidden="true" />
           </button>
-          <h2 className="font-heading text-3xl font-semibold text-ink">{wheel.name}</h2>
+          <input
+            type="text"
+            value={nameDraft}
+            onChange={(e) => setNameDraft(e.target.value)}
+            onBlur={() => renameWheel(wheelId, nameDraft)}
+            onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+            aria-label="Navn på hjulet"
+            className="min-w-0 flex-1 rounded-xl2 border-2 border-transparent bg-transparent px-2 py-1 font-heading text-3xl font-semibold text-ink transition-colors hover:border-ink/10 focus:border-ink/20 focus:bg-surface focus:outline-none"
+          />
           <button
             type="button"
             onClick={() => setShowEditor((v) => !v)}
@@ -283,8 +297,8 @@ function WheelSpinner({ wheelId, onBack }) {
             className="relative order-1 shrink-0 lg:order-2"
             style={{
               width: showEditor
-                ? "clamp(300px, min(48vw, 58vh), 460px)"
-                : "clamp(320px, min(66vw, 66vh), 620px)",
+                ? "clamp(340px, min(54vw, 68vh), 560px)"
+                : "clamp(360px, min(72vw, 76vh), 720px)",
               aspectRatio: "1 / 1",
             }}
           >
@@ -297,6 +311,10 @@ function WheelSpinner({ wheelId, onBack }) {
                 borderRight: "14px solid transparent",
                 borderTop: "22px solid var(--color-ink)",
               }}
+              aria-hidden="true"
+            />
+            <div
+              className="absolute inset-0 rounded-full shadow-wheel"
               aria-hidden="true"
             />
             <svg
@@ -336,8 +354,8 @@ function WheelSpinner({ wheelId, onBack }) {
                 onClick={spin}
                 disabled={spinning || activeSectors.length < 2}
                 aria-label="Spinn hjulet"
-                className="absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-primary font-heading text-xl font-bold text-white shadow-clay transition-all duration-150 hover:bg-primary-hover active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
-                style={{ width: "28%", height: "28%" }}
+                className="absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-primary font-heading text-lg font-bold text-white shadow-hub transition-all duration-150 hover:bg-primary-hover active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
+                style={{ width: "20%", height: "20%" }}
               >
                 {spinning ? "Spinner…" : "Spinn"}
               </button>
@@ -347,7 +365,7 @@ function WheelSpinner({ wheelId, onBack }) {
       </div>
 
       {showEditor && (
-        <aside className="w-full shrink-0 rounded-xl2 border-2 border-ink/10 bg-surface p-5 text-left shadow-clay lg:w-[26rem]">
+        <aside className="w-full shrink-0 rounded-xl2 border-2 border-ink/10 bg-surface p-5 text-left shadow-clay lg:ml-auto lg:w-72">
           <h3 className="mb-4 font-heading text-xl font-semibold text-ink">Sektorer</h3>
           {spinning && (
             <p className="mb-3 text-sm text-ink/60">

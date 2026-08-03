@@ -5,6 +5,17 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 ## [Unreleased]
 
 ### Added
+- Adjektivfortelling module registration in App.jsx and Dashboard component for full dashboard and routing integration.
+- New "Støymeter" module: team-based noise competition using the Web Audio API to measure peak microphone loudness over a timed round, with team setup, a visual countdown ("Gjør dere klare... 3, 2, 1, BRÅK!"), a live reactive volume bar, and a final scoreboard crowning the loudest team.
+- Adjektivfortelling module now accessible from the dashboard with routing integration.
+- Five modules now registered in routing and dashboard: GjettE, 2+1 fake, Send bomben, Hangman, and Adjektivfortelling.
+- Adjektivfortelling module components: StoryList, StoryEditor (with placeholder insertion), CollectView (projector-style input), RevealView (line-by-line and full-screen modes), and AdjektivfortellingArena state machine.
+- Adjektivfortelling module view architecture with list, editor, collector, and reveal displays using an arena state machine.
+- Store state and actions for managing adjective stories (adjectiveStories).
+- Adjective story parsing and rendering helpers for the Adjektivfortelling module.
+- Implementation plan for the Adjektivfortelling (Adjective Storytelling) module.
+- Design document for the Adjektivfortelling (Adjective Storytelling) module.
+- New "Hangman" module: classic hangman with an animated SVG gallows, on-screen and physical keyboard input, and two word sources — a random word generator (Bokmål/Nynorsk/Engelsk, reusing "Send bomben"'s filtered dictionaries and mature-word denylist) and a gamehost mode where a host types and hides a custom word before play starts.
 - Wheel sector editor now supports importing sectors from saved lists with an "Importer fra liste" button.
 - Wheel presentation mode: centered spin button in the middle of the wheel when the editor is hidden, with a winner popup showing the winning sector and offering quick respin or remove-and-respin actions.
 - Wheel landing point is now randomized within the winning sector (with safe margins) instead of always centered, creating a more unpredictable casino-like spin experience; control buttons and status moved to a left column layout, and collapsed-editor wheel size reduced.
@@ -18,6 +29,8 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 - Stians game: Scoreboard highlights the category column currently under review and previews pending points live as "forrige+endring" (e.g. "0+1") before the round is committed.
 
 ### Changed
+- Registered Adjektivfortelling module in App.jsx routing and Dashboard component integration.
+- Updated CHANGELOG.md to document recent Wheel module improvements including sector import, presentation mode, landing point randomization, idle-spin animation, tick sound, and label rendering.
 - Wheel spinner animation now uses quintic ease-out and longer duration (5.5s) for more suspenseful deceleration that crawls noticeably in the final stretch before landing.
 - Synced pending workspace edits across spin wheel, Stians game, timer, dice, nearest-thousand modules, and shared UI/store code.
 - Stians game: The manual letter input is now masked (shown as dots) so the letter stays hidden until "Bruk" reveals it in the main display.

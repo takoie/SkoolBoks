@@ -33,3 +33,6 @@ graphify-out/
 docs/
 CLAUDE.md
 README.md
+
+# Tauri updater private signing key — never commit this
+src-tauri/updater.key

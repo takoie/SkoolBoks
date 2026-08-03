@@ -6,17 +6,6 @@ export function pickLetter(usedLetters) {
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
 
-export function pickRerollLetter(usedLetters, excludeLetter) {
-  const pool = NORWEGIAN_ALPHABET.filter(
-    (l) => !usedLetters.includes(l) && l !== excludeLetter
-  );
-  const candidates =
-    pool.length > 0
-      ? pool
-      : NORWEGIAN_ALPHABET.filter((l) => l !== excludeLetter);
-  return candidates[Math.floor(Math.random() * candidates.length)];
-}
-
 // The group whose turn it is to state their answer for the category
 // currently being reviewed: the first group in turn order with no mark yet.
 export function getCurrentReviewGroupId(stiansGame) {
@@ -62,8 +51,8 @@ export function commitRound(stiansGame) {
     scores,
     review: null,
     leadGroupId: null,
-    // Force a fresh draw next round — otherwise "Start skriving" stays
-    // enabled on the previous round's letter with no signal it's stale.
+    // Force a fresh draw next round — otherwise the idle screen would show
+    // the previous round's letter with no signal it's stale.
     currentLetter: null,
     phase: "idle",
   };

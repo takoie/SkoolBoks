@@ -27,6 +27,13 @@ const sounds = {
       tone(freq, t + i * 0.09, 0.4)
     );
   },
+  bombTick: () => tone(220, getCtx().currentTime, 0.06, 0.12),
+  explosion: () => {
+    const t = getCtx().currentTime;
+    [110, 90, 70, 55].forEach((freq, i) =>
+      tone(freq, t + i * 0.02, 0.6, 0.22)
+    );
+  },
 };
 
 export function playSound(name, enabled) {

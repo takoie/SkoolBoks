@@ -1,5 +1,3 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBox } from "@fortawesome/free-solid-svg-icons";
 import { Minus, Square, X, Sun, Moon } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useAppStore } from "../store/useAppStore";
@@ -13,16 +11,11 @@ function TitleBar() {
 
   return (
     <div className="flex h-10 items-center justify-between bg-primary-active pl-3 pr-0 text-white select-none">
-      <div className="flex items-center gap-2">
-        <span className="flex h-6 w-6 items-center justify-center rounded-md bg-white/15">
-          <FontAwesomeIcon icon={faBox} className="h-3.5 w-3.5" aria-hidden="true" />
-        </span>
-        <span className="font-heading text-sm font-semibold tracking-wide">
-          SkoolBox
-        </span>
-      </div>
-
-      <div className="h-full flex-1" data-tauri-drag-region onDoubleClick={() => appWindow.toggleMaximize()} />
+      <div
+        className="h-full flex-1"
+        data-tauri-drag-region
+        onDoubleClick={() => appWindow.toggleMaximize()}
+      />
 
       <div className="relative z-[60] flex h-full items-center">
         <button

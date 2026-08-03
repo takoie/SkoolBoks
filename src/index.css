@@ -15,10 +15,21 @@
   --color-accent-lime: #84cc16;
   --color-accent-peach: #fdba74;
   --color-accent-coral: #fb7185;
+  --color-accent-teal: #2dd4bf;
+  --color-accent-sky: #38bdf8;
+  --color-accent-violet: #a78bfa;
+  --color-accent-fuchsia: #e879f9;
+  --color-accent-gold: #facc15;
+  --color-accent-green: #4ade80;
   --color-surface: #ffffff;
   --color-canvas: #f5f3ff;
   --color-ink: #1e1b4b;
   --color-destructive: #dc2626;
+
+  /* GjettE guess feedback — deliberately not Wordle's green/yellow/gray. */
+  --color-guess-correct: #0d9488;
+  --color-guess-present: #d97706;
+  --color-guess-absent: #6b6892;
 
   /* Fixed (non-theme-switching) text color for content placed directly on
      solid/high-opacity accent-lime, accent-peach or accent-coral fills.
@@ -31,6 +42,12 @@
   --color-accent-lime-ink: #3f6212;
   --color-accent-peach-ink: #c2410c;
   --color-accent-coral-ink: #be123c;
+  --color-accent-teal-ink: #0f766e;
+  --color-accent-sky-ink: #0369a1;
+  --color-accent-violet-ink: #6d28d9;
+  --color-accent-fuchsia-ink: #a21caf;
+  --color-accent-gold-ink: #a16207;
+  --color-accent-green-ink: #15803d;
 
   --font-heading: "Baloo 2", sans-serif;
   --font-body: "Nunito", sans-serif;
@@ -38,6 +55,10 @@
   --radius-xl2: 20px;
 
   --shadow-clay: 0 2px 0 rgba(30, 27, 75, 0.15), 0 8px 20px -6px rgba(67, 56, 202, 0.25);
+  --shadow-wheel: 0 22px 44px -14px rgba(30, 27, 75, 0.5), 0 8px 18px -6px rgba(30, 27, 75, 0.3),
+    inset 0 2px 5px rgba(255, 255, 255, 0.55);
+  --shadow-hub: 0 10px 22px -6px rgba(30, 27, 75, 0.55), 0 3px 8px -2px rgba(30, 27, 75, 0.4),
+    inset 0 2px 3px rgba(255, 255, 255, 0.4), inset 0 -3px 6px rgba(30, 27, 75, 0.25);
 
   --spacing-touch: 64px;
 }
@@ -54,8 +75,22 @@
   --color-accent-lime-ink: #a3e635;
   --color-accent-peach-ink: #fb923c;
   --color-accent-coral-ink: #fb7185;
+  --color-accent-teal-ink: #5eead4;
+  --color-accent-sky-ink: #7dd3fc;
+  --color-accent-violet-ink: #c4b5fd;
+  --color-accent-fuchsia-ink: #f0abfc;
+  --color-accent-gold-ink: #fde047;
+  --color-accent-green-ink: #86efac;
+
+  --color-guess-correct: #2dd4bf;
+  --color-guess-present: #fbbf24;
+  --color-guess-absent: #45415f;
 
   --shadow-clay: 0 2px 0 rgba(0, 0, 0, 0.5), 0 8px 20px -6px rgba(0, 0, 0, 0.55);
+  --shadow-wheel: 0 22px 44px -12px rgba(0, 0, 0, 0.7), 0 8px 20px -6px rgba(0, 0, 0, 0.55),
+    inset 0 2px 5px rgba(255, 255, 255, 0.08);
+  --shadow-hub: 0 10px 22px -6px rgba(0, 0, 0, 0.75), 0 3px 8px -2px rgba(0, 0, 0, 0.6),
+    inset 0 2px 3px rgba(255, 255, 255, 0.12), inset 0 -3px 6px rgba(0, 0, 0, 0.35);
 }
 
 html,
@@ -144,6 +179,48 @@ h4 {
   }
 }
 
+@keyframes guess-shake {
+  10%,
+  90% {
+    transform: translateX(-2px);
+  }
+  20%,
+  80% {
+    transform: translateX(4px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-8px);
+  }
+  40%,
+  60% {
+    transform: translateX(8px);
+  }
+}
+
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(-0.4deg);
+  }
+  50% {
+    transform: rotate(0.4deg);
+  }
+}
+
+@keyframes tile-flip {
+  0% {
+    transform: rotateX(0deg);
+  }
+  50% {
+    transform: rotateX(90deg);
+  }
+  100% {
+    transform: rotateX(0deg);
+  }
+}
+
 .animate-pop-in {
   animation: pop-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -166,6 +243,18 @@ h4 {
 
 .animate-idle-spin {
   animation: idle-spin 24s linear infinite;
+}
+
+.animate-guess-shake {
+  animation: guess-shake 0.5s ease-in-out;
+}
+
+.animate-tile-flip {
+  animation: tile-flip 0.5s ease-in-out both;
+}
+
+.animate-wiggle {
+  animation: wiggle 0.45s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

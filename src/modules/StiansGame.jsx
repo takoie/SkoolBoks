@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { Plus, Trash2, Check, Play, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, Check, Play, ArrowLeft, Trophy, Undo2 } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import {
+  NORWEGIAN_ALPHABET,
   getGroupTotal,
   getCurrentReviewGroupId,
   getWinner,
   getMarkDelta,
 } from "../lib/stiansGame";
 import { playSound } from "../lib/sound";
-import { fireConfetti } from "../lib/confetti";
 
 // While a category is being reviewed, its column is highlighted and each
 // group's cell previews the pending change as "previous+delta" (e.g. "0+1")
@@ -22,72 +22,107 @@ function formatLiveCell(prevPoints, mark, pointsPerRound) {
   return `${prevPoints}${sign}${delta}`;
 }
 
-function ScoreBoard({ groups, categories, scores, review, pointsPerRound }) {
+function ScoreBoard({
+  groups,
+  categories,
+  scores,
+  review,
+  pointsPerRound,
+  bonusEnabled,
+  reviewingGroupId,
+}) {
   const reviewedCategory = review ? categories[review.categoryIndex] : null;
 
   return (
     <div className="mb-8 overflow-x-auto">
-      <table className="w-full border-collapse overflow-hidden rounded-xl2 border-2 border-ink/10 shadow-clay">
-        <thead>
-          <tr className="bg-primary/10">
-            <th
-              scope="col"
-              className="border-2 border-ink/10 px-4 py-3 text-left font-heading text-lg text-ink"
-            >
-              Gruppe
-            </th>
-            {categories.map((cat) => (
+      <div className="w-full overflow-hidden rounded-xl2 border-2 border-ink/10 shadow-clay">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-primary/10">
               <th
-                key={cat}
                 scope="col"
-                className={`border-2 border-ink/10 px-4 py-3 text-left font-heading text-base text-ink transition-colors ${
-                  cat === reviewedCategory ? "bg-primary/30" : ""
-                }`}
+                className="border-2 border-ink/10 px-4 py-3 text-left font-heading text-lg text-ink"
               >
-                {cat}
+                Gruppe
               </th>
-            ))}
-            <th
-              scope="col"
-              className="border-2 border-ink/10 bg-accent-lime/30 px-4 py-3 text-left font-heading text-lg text-ink"
-            >
-              TOTAL
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {groups.map((g) => {
-            const entry = scores[g.id] ?? { byCategory: {}, bonus: 0 };
-            return (
-              <tr key={g.id} className="bg-surface">
-                <td className="border-2 border-ink/10 px-4 py-3 font-heading font-semibold text-ink">
-                  {g.name}
-                </td>
-                {categories.map((cat) => {
-                  const mark = review?.marks[g.id]?.[cat];
-                  return (
-                    <td
-                      key={cat}
-                      className={`border-2 border-ink/10 px-4 py-3 font-body text-lg text-ink transition-colors ${
-                        cat === reviewedCategory ? "bg-primary/10" : ""
-                      }`}
-                    >
-                      {formatLiveCell(
-                        entry.byCategory[cat] ?? 0,
-                        mark,
-                        pointsPerRound
-                      )}
+              {categories.map((cat) => (
+                <th
+                  key={cat}
+                  scope="col"
+                  className={`border-2 border-ink/10 px-4 py-3 text-left font-heading text-base text-ink transition-colors ${
+                    cat === reviewedCategory ? "bg-primary/30" : ""
+                  }`}
+                >
+                  {cat}
+                </th>
+              ))}
+              {bonusEnabled && (
+                <th
+                  scope="col"
+                  aria-label="Bonus"
+                  className="border-2 border-ink/10 px-4 py-3 text-center font-heading text-lg text-ink"
+                >
+                  <Trophy size={20} className="mx-auto" aria-hidden="true" />
+                </th>
+              )}
+              <th
+                scope="col"
+                className="border-2 border-ink/10 bg-accent-lime/30 px-4 py-3 text-left font-heading text-lg text-ink"
+              >
+                TOTAL
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {groups.map((g) => {
+              const entry = scores[g.id] ?? { byCategory: {}, bonus: 0 };
+              const isReviewing = g.id === reviewingGroupId;
+              return (
+                <tr
+                  key={g.id}
+                  className={`transition-colors ${
+                    isReviewing ? "bg-primary/10" : "bg-surface"
+                  }`}
+                >
+                  <td
+                    className={`border-2 border-ink/10 px-4 py-3 font-heading font-semibold transition-colors ${
+                      isReviewing ? "text-primary" : "text-ink"
+                    }`}
+                  >
+                    {isReviewing && "▶ "}
+                    {g.name}
+                  </td>
+                  {categories.map((cat) => {
+                    const mark = review?.marks[g.id]?.[cat];
+                    return (
+                      <td
+                        key={cat}
+                        className={`border-2 border-ink/10 px-4 py-3 font-body text-lg text-ink transition-colors ${
+                          cat === reviewedCategory ? "bg-primary/10" : ""
+                        }`}
+                      >
+                        {formatLiveCell(
+                          entry.byCategory[cat] ?? 0,
+                          mark,
+                          pointsPerRound
+                        )}
+                      </td>
+                    );
+                  })}
+                  {bonusEnabled && (
+                    <td className="border-2 border-ink/10 px-4 py-3 text-center font-body text-lg text-ink">
+                      {entry.bonus}
                     </td>
-                  );
-                })}
-                <td className="border-2 border-ink/10 bg-accent-lime/10 px-4 py-3 font-heading text-lg font-bold text-ink">
-                  {getGroupTotal(scores, g.id)}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                  )}
+                  <td className="border-2 border-ink/10 bg-accent-lime/10 px-4 py-3 font-heading text-lg font-bold text-ink">
+                    {getGroupTotal(scores, g.id)}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -152,138 +187,168 @@ function IdlePhase() {
   const bonusEnabled = useAppStore((s) => s.stiansGame.bonusEnabled);
   const bonusPoints = useAppStore((s) => s.stiansGame.bonusPoints);
   const timerSeconds = useAppStore((s) => s.stiansGame.timerSeconds);
+  const roundMode = useAppStore((s) => s.stiansGame.roundMode);
+  const canUndoMark = useAppStore((s) => !!s.stiansGameUndo);
 
   const drawStiansLetter = useAppStore((s) => s.drawStiansLetter);
-  const rerollStiansLetter = useAppStore((s) => s.rerollStiansLetter);
   const setStiansManualLetter = useAppStore((s) => s.setStiansManualLetter);
   const setStiansPointsPerRound = useAppStore((s) => s.setStiansPointsPerRound);
   const setStiansBonusEnabled = useAppStore((s) => s.setStiansBonusEnabled);
   const setStiansBonusPoints = useAppStore((s) => s.setStiansBonusPoints);
   const setStiansTimerSeconds = useAppStore((s) => s.setStiansTimerSeconds);
+  const setStiansRoundMode = useAppStore((s) => s.setStiansRoundMode);
   const startStiansWriting = useAppStore((s) => s.startStiansWriting);
-  const endStiansGame = useAppStore((s) => s.endStiansGame);
+  const undoStiansMark = useAppStore((s) => s.undoStiansMark);
 
   const [manualDraft, setManualDraft] = useState("");
 
+  function handleDraw() {
+    drawStiansLetter();
+    startStiansWriting();
+  }
+
   function handleManualLetter() {
-    if (!manualDraft.trim()) return;
-    setStiansManualLetter(manualDraft);
+    const trimmed = manualDraft.trim();
+    if (!trimmed || !NORWEGIAN_ALPHABET.includes(trimmed.toLocaleUpperCase("no")))
+      return;
+    setStiansManualLetter(trimmed);
     setManualDraft("");
+    startStiansWriting();
   }
 
   return (
     <div className="mx-auto max-w-5xl text-center">
-      <div
-        role="status"
-        aria-live="polite"
-        className="mb-8 flex min-h-[180px] w-full items-center justify-center rounded-xl2 border-2 border-ink/10 bg-surface shadow-clay"
-      >
-        <span
-          key={currentLetter ?? "none"}
-          className="inline-block animate-pop-in font-heading text-8xl font-bold text-primary"
-        >
-          {currentLetter ?? "?"}
-        </span>
-      </div>
-
-      <div className="mb-6 flex flex-wrap items-center justify-center gap-3">
-        <button
-          type="button"
-          onClick={drawStiansLetter}
-          className="min-h-touch cursor-pointer rounded-xl2 bg-primary px-6 py-3 font-heading text-lg font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97]"
-        >
-          Trekk bokstav
-        </button>
-        <button
-          type="button"
-          onClick={rerollStiansLetter}
-          disabled={!currentLetter}
-          className="min-h-touch cursor-pointer rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-all duration-150 hover:bg-ink/5 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
-        >
-          Trekk på nytt
-        </button>
-        <label className="flex items-center gap-2 font-body text-lg text-ink">
-          Egen bokstav:
-          <input
-            type="password"
-            autoComplete="off"
-            maxLength={1}
-            value={manualDraft}
-            onChange={(e) => setManualDraft(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleManualLetter()}
-            aria-label="Egen bokstav (skjult til du trykker Bruk)"
-            className="min-h-touch w-14 rounded-xl2 border-2 border-ink/10 bg-surface px-2 py-2 text-center font-body text-lg text-ink"
-          />
+      <div className="mb-8 flex flex-wrap items-center justify-center gap-6">
+        <div className="flex flex-col items-center gap-3">
           <button
             type="button"
-            onClick={handleManualLetter}
-            disabled={!manualDraft.trim()}
-            className="min-h-touch cursor-pointer rounded-xl2 border-2 border-ink/10 px-4 py-2 font-heading font-semibold text-ink transition-colors hover:bg-ink/5 disabled:cursor-not-allowed disabled:opacity-40"
+            onClick={handleDraw}
+            className="min-h-touch cursor-pointer rounded-xl2 bg-primary px-6 py-3 font-heading text-lg font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97]"
           >
-            Bruk
+            Trekk bokstav
           </button>
-        </label>
-      </div>
-
-      <div className="mb-8 flex flex-wrap items-center justify-center gap-6 rounded-xl2 border-2 border-ink/10 bg-surface p-4 shadow-clay">
-        <label className="flex items-center gap-2 font-body text-lg text-ink">
-          Poeng/runde:
-          <ClampedNumberInput
-            min={1}
-            value={pointsPerRound}
-            onCommit={setStiansPointsPerRound}
-            className="min-h-touch w-16 rounded-xl2 border-2 border-ink/10 bg-surface px-2 py-2 text-center font-body text-lg text-ink"
-          />
-        </label>
-        <label className="flex items-center gap-2 font-body text-lg text-ink">
-          Sekunder:
-          <ClampedNumberInput
-            min={5}
-            max={600}
-            value={timerSeconds}
-            onCommit={setStiansTimerSeconds}
-            className="min-h-touch w-20 rounded-xl2 border-2 border-ink/10 bg-surface px-2 py-2 text-center font-body text-lg text-ink"
-          />
-        </label>
-        <label className="flex cursor-pointer items-center gap-2 font-body text-lg text-ink">
-          <input
-            type="checkbox"
-            checked={bonusEnabled}
-            onChange={(e) => setStiansBonusEnabled(e.target.checked)}
-            className="h-6 w-6 cursor-pointer accent-primary"
-          />
-          Bonus for først ferdig
-        </label>
-        {bonusEnabled && (
           <label className="flex items-center gap-2 font-body text-lg text-ink">
-            Bonuspoeng:
+            Egen bokstav:
+            <input
+              type="password"
+              autoComplete="off"
+              maxLength={1}
+              value={manualDraft}
+              onChange={(e) => setManualDraft(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleManualLetter()}
+              aria-label="Egen bokstav (skjult til du trykker Bruk)"
+              className="min-h-touch w-14 rounded-xl2 border-2 border-ink/10 bg-surface px-2 py-2 text-center font-body text-lg text-ink"
+            />
+            <button
+              type="button"
+              onClick={handleManualLetter}
+              disabled={!manualDraft.trim()}
+              className="min-h-touch cursor-pointer rounded-xl2 border-2 border-ink/10 px-4 py-2 font-heading font-semibold text-ink transition-colors hover:bg-ink/5 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Bruk
+            </button>
+          </label>
+        </div>
+
+        <div
+          role="status"
+          aria-live="polite"
+          className="flex min-h-[180px] w-56 items-center justify-center rounded-xl2 border-2 border-ink/10 bg-surface shadow-clay"
+        >
+          <span
+            key={currentLetter ?? "none"}
+            className="inline-block animate-pop-in font-heading text-8xl font-bold text-primary"
+          >
+            {currentLetter ?? "?"}
+          </span>
+        </div>
+
+        <div className="flex flex-col items-center gap-3 rounded-xl2 border-2 border-ink/10 bg-surface p-4 shadow-clay">
+          <label className="flex items-center gap-2 font-body text-lg text-ink">
+            Poeng/runde:
             <ClampedNumberInput
               min={1}
-              value={bonusPoints}
-              onCommit={setStiansBonusPoints}
+              value={pointsPerRound}
+              onCommit={setStiansPointsPerRound}
               className="min-h-touch w-16 rounded-xl2 border-2 border-ink/10 bg-surface px-2 py-2 text-center font-body text-lg text-ink"
             />
           </label>
-        )}
+          <div className="flex items-center gap-2 font-body text-lg text-ink">
+            Rundetype:
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={() => setStiansRoundMode("timed")}
+                aria-pressed={roundMode === "timed"}
+                className={`min-h-touch cursor-pointer rounded-xl2 border-2 px-3 py-2 font-heading text-sm font-semibold transition-colors ${
+                  roundMode === "timed"
+                    ? "border-primary bg-primary text-white"
+                    : "border-ink/10 text-ink hover:bg-primary/10"
+                }`}
+              >
+                Tidsbasert
+              </button>
+              <button
+                type="button"
+                onClick={() => setStiansRoundMode("shout")}
+                aria-pressed={roundMode === "shout"}
+                className={`min-h-touch cursor-pointer rounded-xl2 border-2 px-3 py-2 font-heading text-sm font-semibold transition-colors ${
+                  roundMode === "shout"
+                    ? "border-primary bg-primary text-white"
+                    : "border-ink/10 text-ink hover:bg-primary/10"
+                }`}
+              >
+                Kun rop
+              </button>
+            </div>
+          </div>
+          {roundMode === "timed" && (
+            <label className="flex items-center gap-2 font-body text-lg text-ink">
+              Sekunder:
+              <ClampedNumberInput
+                min={5}
+                max={600}
+                value={timerSeconds}
+                onCommit={setStiansTimerSeconds}
+                className="min-h-touch w-20 rounded-xl2 border-2 border-ink/10 bg-surface px-2 py-2 text-center font-body text-lg text-ink"
+              />
+            </label>
+          )}
+          <label className="flex cursor-pointer items-center gap-2 font-body text-lg text-ink">
+            <input
+              type="checkbox"
+              checked={bonusEnabled}
+              onChange={(e) => setStiansBonusEnabled(e.target.checked)}
+              className="h-6 w-6 cursor-pointer accent-primary"
+            />
+            Bonus for først ferdig
+          </label>
+          {bonusEnabled && (
+            <label className="flex items-center gap-2 font-body text-lg text-ink">
+              Bonuspoeng:
+              <ClampedNumberInput
+                min={1}
+                value={bonusPoints}
+                onCommit={setStiansBonusPoints}
+                className="min-h-touch w-16 rounded-xl2 border-2 border-ink/10 bg-surface px-2 py-2 text-center font-body text-lg text-ink"
+              />
+            </label>
+          )}
+        </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-4">
-        <button
-          type="button"
-          onClick={startStiansWriting}
-          disabled={!currentLetter}
-          className="min-h-touch cursor-pointer rounded-xl2 bg-primary px-8 py-3 font-heading text-xl font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
-        >
-          Start skriving
-        </button>
-        <button
-          type="button"
-          onClick={endStiansGame}
-          className="min-h-touch cursor-pointer rounded-xl2 border-2 border-destructive/30 px-6 py-3 font-heading text-lg font-semibold text-destructive transition-colors hover:bg-destructive/10"
-        >
-          Avslutt spill
-        </button>
-      </div>
+      {canUndoMark && (
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <button
+            type="button"
+            onClick={undoStiansMark}
+            className="flex min-h-touch cursor-pointer items-center gap-2 rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-colors hover:bg-ink/5"
+          >
+            <Undo2 size={18} aria-hidden="true" />
+            Angre siste vurdering
+          </button>
+        </div>
+      )}
       <p className="mt-3 text-base text-ink/60">
         Brukte bokstaver: {usedLetters.join(", ") || "ingen ennå"}
       </p>
@@ -486,22 +551,24 @@ function WritingPhase() {
   const categories = useAppStore((s) => s.stiansGame.categories);
   const groups = useAppStore((s) => s.stiansGame.groups);
   const timerSeconds = useAppStore((s) => s.stiansGame.timerSeconds);
+  const roundMode = useAppStore((s) => s.stiansGame.roundMode);
   const stopStiansWriting = useAppStore((s) => s.stopStiansWriting);
-  const endStiansGame = useAppStore((s) => s.endStiansGame);
+
+  const isTimed = roundMode === "timed";
 
   const [remaining, setRemaining] = useState(timerSeconds);
-  const [running, setRunning] = useState(false);
+  const [running, setRunning] = useState(isTimed);
   const intervalRef = useRef(null);
   const stoppedRef = useRef(false);
 
   useEffect(() => {
     setRemaining(timerSeconds);
-    setRunning(false);
+    setRunning(isTimed);
     stoppedRef.current = false;
-  }, [timerSeconds]);
+  }, [timerSeconds, isTimed]);
 
   useEffect(() => {
-    if (!running) return undefined;
+    if (!isTimed || !running) return undefined;
     intervalRef.current = setInterval(() => {
       setRemaining((prev) => {
         if (prev <= 1) return 0;
@@ -510,7 +577,7 @@ function WritingPhase() {
       });
     }, 1000);
     return () => clearInterval(intervalRef.current);
-  }, [running, soundEnabled]);
+  }, [isTimed, running, soundEnabled]);
 
   // State updater functions must stay pure — triggering the store update
   // (which re-renders StiansGame) directly inside setRemaining's updater
@@ -518,12 +585,12 @@ function WritingPhase() {
   // different component" warning. Reacting to the zero-crossing here instead
   // keeps the store call in a normal effect, outside any render pass.
   useEffect(() => {
-    if (remaining > 0 || stoppedRef.current) return;
+    if (!isTimed || remaining > 0 || stoppedRef.current) return;
     setRunning(false);
     playSound("ding", soundEnabled);
     stoppedRef.current = true;
     stopStiansWriting(null);
-  }, [remaining, soundEnabled, stopStiansWriting]);
+  }, [isTimed, remaining, soundEnabled, stopStiansWriting]);
 
   function handleShout(groupId) {
     if (stoppedRef.current) return;
@@ -556,37 +623,36 @@ function WritingPhase() {
         Kategorier: {categories.join(", ")}
       </p>
 
-      <div
-        className={`mb-6 font-heading text-5xl font-bold ${
-          remaining > 0 && remaining <= 10 ? "text-accent-coral-ink" : "text-ink"
-        }`}
-        style={{ fontVariantNumeric: "tabular-nums" }}
-      >
-        {mm}:{ss}
-      </div>
+      {isTimed && (
+        <>
+          <div
+            className={`mb-6 font-heading text-5xl font-bold ${
+              remaining > 0 && remaining <= 10
+                ? "text-accent-coral-ink"
+                : "text-ink"
+            }`}
+            style={{ fontVariantNumeric: "tabular-nums" }}
+          >
+            {mm}:{ss}
+          </div>
 
-      <div className="mb-8 flex items-center justify-center gap-4">
-        <button
-          type="button"
-          onClick={() => setRunning((r) => !r)}
-          disabled={remaining === 0}
-          className="min-h-touch cursor-pointer rounded-xl2 bg-primary px-6 py-3 font-heading text-lg font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
-        >
-          {running ? "Pause" : "Start tid"}
-        </button>
-        <button
-          type="button"
-          onClick={handleManualStop}
-          className="min-h-touch cursor-pointer rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-colors hover:bg-ink/5"
-        >
-          Stopp (uten lag)
-        </button>
-      </div>
+          <div className="mb-8 flex items-center justify-center gap-4">
+            <button
+              type="button"
+              onClick={() => setRunning((r) => !r)}
+              disabled={remaining === 0}
+              className="min-h-touch cursor-pointer rounded-xl2 bg-primary px-6 py-3 font-heading text-lg font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100"
+            >
+              {running ? "Pause" : "Fortsett"}
+            </button>
+          </div>
+        </>
+      )}
 
       <p className="mb-3 font-heading text-lg font-semibold text-ink">
         Gruppa som er ferdig roper "Stians game!":
       </p>
-      <div className="flex flex-wrap items-center justify-center gap-3">
+      <div className="mb-8 flex flex-wrap items-center justify-center gap-3">
         {groups.map((g) => (
           <button
             key={g.id}
@@ -601,10 +667,10 @@ function WritingPhase() {
 
       <button
         type="button"
-        onClick={endStiansGame}
-        className="mt-8 min-h-touch cursor-pointer rounded-xl2 border-2 border-destructive/30 px-6 py-3 font-heading text-lg font-semibold text-destructive transition-colors hover:bg-destructive/10"
+        onClick={handleManualStop}
+        className="min-h-touch cursor-pointer rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-colors hover:bg-ink/5"
       >
-        Avslutt spill
+        Stopp (uten lag)
       </button>
     </div>
   );
@@ -617,28 +683,28 @@ function WritingPhase() {
 const MARK_OPTIONS = [
   {
     mark: 1,
-    short: "✓ Godkjent",
+    short: "✓",
     label: "Godkjent",
     idle: "border-accent-lime/40 text-ink hover:bg-accent-lime/20",
     active: "border-accent-lime bg-accent-lime/80 text-accent-ink",
   },
   {
     mark: 0.5,
-    short: "½ 50%",
+    short: "½",
     label: "50% riktig",
     idle: "border-accent-peach/50 text-ink hover:bg-accent-peach/20",
     active: "border-accent-peach bg-accent-peach/80 text-accent-ink",
   },
   {
     mark: 0,
-    short: "✗ Ikke godkjent",
+    short: "✗",
     label: "Ikke godkjent",
     idle: "border-destructive/30 text-ink hover:bg-destructive/10",
     active: "border-destructive bg-destructive/80 text-white",
   },
   {
     mark: -1,
-    short: "− Minus",
+    short: "−1",
     label: "Minuspoeng",
     idle: "border-ink/20 text-ink hover:bg-ink/10",
     active: "border-ink bg-ink text-canvas",
@@ -666,7 +732,8 @@ function markBadge(mark) {
 function ReviewingPhase() {
   const stiansGame = useAppStore((s) => s.stiansGame);
   const markStiansApproval = useAppStore((s) => s.markStiansApproval);
-  const endStiansGame = useAppStore((s) => s.endStiansGame);
+  const canUndoMark = useAppStore((s) => !!s.stiansGameUndo);
+  const undoStiansMark = useAppStore((s) => s.undoStiansMark);
   const { review, categories, groups, leadGroupId } = stiansGame;
   const nextRowRef = useRef(null);
 
@@ -686,23 +753,19 @@ function ReviewingPhase() {
   ).length;
 
   return (
-    <div className="mx-auto max-w-4xl text-center">
+    <div className="w-full text-center">
       <div role="status" aria-live="polite">
         <p className="mb-2 font-body text-lg text-ink/70">
           Kategori {review.categoryIndex + 1} av {categories.length}
         </p>
-        <h3 className="mb-2 font-heading text-4xl font-bold text-ink">
+        <h3 className="mb-6 font-heading text-4xl font-bold text-ink">
           {category}
         </h3>
         <p className="sr-only">
           {remaining} av {review.groupOrder.length} grupper gjenstår
         </p>
       </div>
-      <p className="mb-6 text-base text-ink/60">
-        Klikk direkte på en gruppe for å vurdere den — ingen fast rekkefølge.
-      </p>
-
-      <div className="mb-8 flex flex-col items-center gap-3">
+      <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {review.groupOrder.map((groupId) => {
           const group = groupsById[groupId];
           const mark = review.marks[groupId]?.[category];
@@ -713,7 +776,7 @@ function ReviewingPhase() {
               ref={isNext ? nextRowRef : null}
               tabIndex={isNext ? -1 : undefined}
               aria-current={isNext ? "true" : undefined}
-              className={`flex w-full max-w-lg flex-col gap-3 rounded-xl2 border-2 px-5 py-3 shadow-clay transition-colors ${
+              className={`flex flex-col gap-3 rounded-xl2 border-2 px-5 py-3 shadow-clay transition-colors ${
                 isNext
                   ? "border-primary bg-primary/10"
                   : mark === undefined
@@ -729,7 +792,7 @@ function ReviewingPhase() {
                 </span>
                 {markBadge(mark)}
               </div>
-              <div className="flex flex-wrap justify-center gap-2">
+              <div className="flex flex-nowrap items-center justify-center gap-2">
                 {MARK_OPTIONS.map((option) => (
                   <button
                     key={option.mark}
@@ -737,7 +800,8 @@ function ReviewingPhase() {
                     onClick={() => markStiansApproval(groupId, option.mark)}
                     aria-label={`${option.label} for ${group?.name}`}
                     aria-pressed={mark === option.mark}
-                    className={`min-h-touch cursor-pointer rounded-xl2 border-2 px-4 py-2 font-heading text-sm font-semibold transition-colors ${
+                    title={option.label}
+                    className={`min-h-touch min-w-touch flex-1 cursor-pointer rounded-xl2 border-2 px-2 py-2 font-heading text-lg font-semibold transition-colors ${
                       mark === option.mark ? option.active : option.idle
                     }`}
                   >
@@ -750,57 +814,20 @@ function ReviewingPhase() {
         })}
       </div>
 
-      <button
-        type="button"
-        onClick={endStiansGame}
-        className="min-h-touch cursor-pointer rounded-xl2 border-2 border-destructive/30 px-6 py-3 font-heading text-lg font-semibold text-destructive transition-colors hover:bg-destructive/10"
-      >
-        Avslutt spill
-      </button>
+      {canUndoMark && (
+        <button
+          type="button"
+          onClick={undoStiansMark}
+          className="inline-flex min-h-touch cursor-pointer items-center gap-2 rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-colors hover:bg-ink/5"
+        >
+          <Undo2 size={18} aria-hidden="true" />
+          Angre siste vurdering
+        </button>
+      )}
     </div>
   );
 }
 
-function EndedPhase() {
-  const groups = useAppStore((s) => s.stiansGame.groups);
-  const scores = useAppStore((s) => s.stiansGame.scores);
-  const resetStiansGameScores = useAppStore((s) => s.resetStiansGameScores);
-  const resetStiansGameFull = useAppStore((s) => s.resetStiansGameFull);
-
-  const winner = getWinner(groups, scores);
-
-  useEffect(() => {
-    fireConfetti();
-  }, []);
-
-  return (
-    <div className="mx-auto max-w-3xl text-center">
-      <h3
-        role="status"
-        aria-live="polite"
-        className="mb-4 animate-pop-in font-heading text-4xl font-bold text-primary"
-      >
-        {winner ? `${winner.name} vinner! 🎉` : "Spillet er over"}
-      </h3>
-      <div className="flex flex-wrap items-center justify-center gap-4">
-        <button
-          type="button"
-          onClick={resetStiansGameScores}
-          className="min-h-touch cursor-pointer rounded-xl2 bg-primary px-6 py-3 font-heading text-lg font-semibold text-white transition-colors hover:bg-primary-hover"
-        >
-          Nytt spill, samme lag/kategorier
-        </button>
-        <button
-          type="button"
-          onClick={resetStiansGameFull}
-          className="min-h-touch cursor-pointer rounded-xl2 border-2 border-ink/10 px-6 py-3 font-heading text-lg font-semibold text-ink transition-colors hover:bg-ink/5"
-        >
-          Helt nytt spill
-        </button>
-      </div>
-    </div>
-  );
-}
 
 const UNFINISHED_PHASE_LABELS = {
   idle: "Klar for å trekke bokstav",
@@ -869,15 +896,6 @@ function StiansGameHome({ onEnterGame }) {
   );
 
   const [confirmingNewGame, setConfirmingNewGame] = useState(false);
-
-  // A game left in "ended" has nothing left to resume — fold it straight
-  // into history as soon as the home screen is shown, instead of leaving it
-  // dangling as a phantom "unfinished" game.
-  useEffect(() => {
-    if (stiansGame.phase === "ended") {
-      resetStiansGameFull();
-    }
-  }, [stiansGame.phase, resetStiansGameFull]);
 
   const unfinishedLabel = UNFINISHED_PHASE_LABELS[stiansGame.phase];
 
@@ -992,40 +1010,53 @@ function StiansGame() {
   const scores = useAppStore((s) => s.stiansGame.scores);
   const review = useAppStore((s) => s.stiansGame.review);
   const pointsPerRound = useAppStore((s) => s.stiansGame.pointsPerRound);
+  const bonusEnabled = useAppStore((s) => s.stiansGame.bonusEnabled);
+  const reviewingGroupId = review
+    ? getCurrentReviewGroupId({ review, categories })
+    : null;
 
   if (view === "home") {
     return <StiansGameHome onEnterGame={() => setView("game")} />;
   }
 
+  const backButton = (
+    <button
+      type="button"
+      onClick={() => setView("home")}
+      className="flex min-h-touch cursor-pointer items-center gap-2 rounded-xl2 border-2 border-ink/10 px-4 py-2 font-heading font-semibold text-ink transition-colors hover:bg-ink/5"
+    >
+      <ArrowLeft size={18} aria-hidden="true" />
+      Tilbake til oversikt
+    </button>
+  );
+
   return (
     <div className="w-full">
-      <button
-        type="button"
-        onClick={() => setView("home")}
-        className="mb-4 flex min-h-touch cursor-pointer items-center gap-2 rounded-xl2 border-2 border-ink/10 px-4 py-2 font-heading font-semibold text-ink transition-colors hover:bg-ink/5"
-      >
-        <ArrowLeft size={18} aria-hidden="true" />
-        Tilbake til oversikt
-      </button>
-
       {phase === "setup" ? (
-        <SetupPhase />
+        <>
+          <div className="mb-4">{backButton}</div>
+          <SetupPhase />
+        </>
       ) : (
         <>
-          <h2 className="mb-6 text-center font-heading text-3xl font-semibold text-ink">
-            Stians game
-          </h2>
+          <div className="relative mb-6 flex items-center justify-center">
+            <div className="absolute left-0">{backButton}</div>
+            <h2 className="font-heading text-3xl font-semibold text-ink">
+              Stians game
+            </h2>
+          </div>
           <ScoreBoard
             groups={groups}
             categories={categories}
             scores={scores}
             review={review}
             pointsPerRound={pointsPerRound}
+            bonusEnabled={bonusEnabled}
+            reviewingGroupId={reviewingGroupId}
           />
           {phase === "idle" && <IdlePhase />}
           {phase === "writing" && <WritingPhase />}
           {phase === "reviewing" && <ReviewingPhase />}
-          {phase === "ended" && <EndedPhase />}
         </>
       )}
     </div>

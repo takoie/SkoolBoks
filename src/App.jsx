@@ -3,6 +3,7 @@ import { useAppStore } from "./store/useAppStore";
 import AppShell from "./components/AppShell";
 import TitleBar from "./components/TitleBar";
 import ResizeHandles from "./components/ResizeHandles";
+import UpdateChecker from "./components/UpdateChecker";
 import Dashboard from "./modules/Dashboard";
 import SpinWheel from "./modules/SpinWheel";
 import QuizArena from "./modules/quiz/QuizArena";
@@ -17,6 +18,8 @@ import TofaktaArena from "./modules/tofakta/TofaktaArena";
 import BombArena from "./modules/bomb/BombArena";
 import HangmanArena from "./modules/hangman/HangmanArena";
 import AdjektivfortellingArena from "./modules/adjektivfortelling/AdjektivfortellingArena";
+import GangemesterArena from "./modules/gangemester/GangemesterArena";
+import NoiseMeterArena from "./modules/noisemeter/NoiseMeterArena";
 
 const MODULE_COMPONENTS = {
   dashboard: Dashboard,
@@ -33,6 +36,8 @@ const MODULE_COMPONENTS = {
   bomb: BombArena,
   hangman: HangmanArena,
   adjektivfortelling: AdjektivfortellingArena,
+  gangemester: GangemesterArena,
+  noisemeter: NoiseMeterArena,
 };
 
 function App() {
@@ -51,6 +56,7 @@ function App() {
       <AppShell>
         <ActiveComponent />
       </AppShell>
+      <UpdateChecker />
     </div>
   );
 }

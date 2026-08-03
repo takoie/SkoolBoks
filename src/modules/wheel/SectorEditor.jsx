@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { List, Plus, Trash2, Upload } from "lucide-react";
 import { useAppStore } from "../../store/useAppStore";
+import Select from "../../components/Select";
 
 function SectorEditor({ sectors, onChange, disabled = false }) {
   const lists = useAppStore((s) => s.classes);
@@ -153,17 +154,16 @@ function SectorEditor({ sectors, onChange, disabled = false }) {
           {Object.keys(lists).length === 0 ? (
             <p className="font-body text-base text-ink/60">Ingen lister tilgjengelig.</p>
           ) : (
-            <select
+            <Select
               value={selectedListId}
-              onChange={(e) => setSelectedListId(e.target.value)}
+              onChange={setSelectedListId}
+              ariaLabel="Velg navneliste"
+              options={Object.entries(lists).map(([id, list]) => ({
+                value: id,
+                label: `${list.name} · ${list.students.length}`,
+              }))}
               className="min-h-touch w-full rounded-xl2 border-2 border-ink/10 bg-surface px-4 py-2 font-body text-base text-ink"
-            >
-              {Object.entries(lists).map(([id, list]) => (
-                <option key={id} value={id}>
-                  {list.name} · {list.students.length}
-                </option>
-              ))}
-            </select>
+            />
           )}
           <div className="flex gap-2">
             <button

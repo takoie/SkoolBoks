@@ -41,11 +41,44 @@ export const useAppStore = create(
       activeModule: "dashboard",
       setActiveModule: (id) => set({ activeModule: id }),
 
+      // Dashboard layout: `order` holds visible module ids in display order,
+      // `hidden` holds ids moved to the drawer. Ids not present in either
+      // (e.g. a module added after this state was last persisted) are
+      // treated as visible and appended at the end by the Dashboard, rather
+      // than requiring a migration here.
+      dashboard: { order: [], hidden: [] },
+      isEditMode: false,
+      toggleEditMode: () => set((s) => ({ isEditMode: !s.isEditMode })),
+
+      hideModule: (id) =>
+        set((s) => ({
+          dashboard: {
+            order: s.dashboard.order.filter((m) => m !== id),
+            hidden: s.dashboard.hidden.includes(id)
+              ? s.dashboard.hidden
+              : [...s.dashboard.hidden, id],
+          },
+        })),
+
+      showModule: (id) =>
+        set((s) => ({
+          dashboard: {
+            order: s.dashboard.order.includes(id)
+              ? s.dashboard.order
+              : [...s.dashboard.order, id],
+            hidden: s.dashboard.hidden.filter((m) => m !== id),
+          },
+        })),
+
+      reorderModules: (orderedIds) =>
+        set((s) => ({ dashboard: { ...s.dashboard, order: orderedIds } })),
+
       classes: {
         [DEFAULT_CLASS_ID]: { name: "Min klasse", students: [] },
       },
       activeClassId: DEFAULT_CLASS_ID,
       drawnStudents: {},
+      lastDrawSize: {},
 
       setActiveClassId: (id) => set({ activeClassId: id }),
 
@@ -82,23 +115,35 @@ export const useAppStore = create(
         })),
 
       resetDrawn: (classId) =>
-        set((s) => ({ drawnStudents: { ...s.drawnStudents, [classId]: [] } })),
+        set((s) => ({
+          drawnStudents: { ...s.drawnStudents, [classId]: [] },
+          lastDrawSize: { ...s.lastDrawSize, [classId]: 0 },
+        })),
 
-      markDrawn: (classId, student) =>
+      // students is an array so several names can be drawn in one batch;
+      // lastDrawSize remembers how many so undoLastDraw can pop the whole
+      // batch instead of a single name.
+      markDrawn: (classId, students) =>
         set((s) => ({
           drawnStudents: {
             ...s.drawnStudents,
-            [classId]: [...(s.drawnStudents[classId] ?? []), student],
+            [classId]: [...(s.drawnStudents[classId] ?? []), ...students],
           },
+          lastDrawSize: { ...s.lastDrawSize, [classId]: students.length },
         })),
 
       undoLastDraw: (classId) =>
-        set((s) => ({
-          drawnStudents: {
-            ...s.drawnStudents,
-            [classId]: (s.drawnStudents[classId] ?? []).slice(0, -1),
-          },
-        })),
+        set((s) => {
+          const n = s.lastDrawSize[classId] ?? 0;
+          if (n === 0) return {};
+          return {
+            drawnStudents: {
+              ...s.drawnStudents,
+              [classId]: (s.drawnStudents[classId] ?? []).slice(0, -n),
+            },
+            lastDrawSize: { ...s.lastDrawSize, [classId]: 0 },
+          };
+        }),
 
       settings: { soundEnabled: true, theme: "dark", gjetteLanguage: "bokmal" },
       setSettings: (partial) =>
@@ -730,15 +775,95 @@ export const useAppStore = create(
         wordMinLength: 3,
         wordMaxLength: 10,
         allowMatureWords: false,
+        extraHandsFeet: false,
+        extraFace: false,
       },
 
       setHangmanSettings: (partial) =>
         set((s) => ({ hangman: { ...s.hangman, ...partial } })),
+
+      gangemester: {
+        mode: "small", // "small" | "large" | "custom"
+        customTables: [7],
+        timerSeconds: 5,
+        highScore: 0,
+      },
+
+      setGangemesterSettings: (partial) =>
+        set((s) => ({ gangemester: { ...s.gangemester, ...partial } })),
+
+      setGangemesterHighScore: (score) =>
+        set((s) => ({
+          gangemester: {
+            ...s.gangemester,
+            highScore: Math.max(s.gangemester.highScore, score),
+          },
+        })),
+
+      // Not persisted (see partialize below) — a live competition session,
+      // not something that should resume after an app restart.
+      noiseMeter: { teams: [], scores: {} },
+
+      addNoiseMeterTeam: (name) =>
+        set((s) => {
+          const trimmed = name.trim();
+          if (!trimmed) return {};
+          return {
+            noiseMeter: {
+              ...s.noiseMeter,
+              teams: [
+                ...s.noiseMeter.teams,
+                { id: crypto.randomUUID(), name: trimmed },
+              ],
+            },
+          };
+        }),
+
+      renameNoiseMeterTeam: (id, name) =>
+        set((s) => {
+          const trimmed = name.trim();
+          if (!trimmed) return {};
+          return {
+            noiseMeter: {
+              ...s.noiseMeter,
+              teams: s.noiseMeter.teams.map((t) =>
+                t.id === id ? { ...t, name: trimmed } : t
+              ),
+            },
+          };
+        }),
+
+      removeNoiseMeterTeam: (id) =>
+        set((s) => {
+          const scores = { ...s.noiseMeter.scores };
+          delete scores[id];
+          return {
+            noiseMeter: {
+              ...s.noiseMeter,
+              teams: s.noiseMeter.teams.filter((t) => t.id !== id),
+              scores,
+            },
+          };
+        }),
+
+      setNoiseMeterScore: (teamId, score) =>
+        set((s) => ({
+          noiseMeter: {
+            ...s.noiseMeter,
+            scores: { ...s.noiseMeter.scores, [teamId]: score },
+          },
+        })),
+
+      resetNoiseMeterScores: () =>
+        set((s) => ({ noiseMeter: { ...s.noiseMeter, scores: {} } })),
+
+      resetNoiseMeterFull: () => set({ noiseMeter: { teams: [], scores: {} } }),
     }),
     {
       name: "skoolbox-store",
       storage: createJSONStorage(() => tauriStorage),
       partialize: (s) => ({
+        dashboard: s.dashboard,
         classes: s.classes,
         activeClassId: s.activeClassId,
         drawnStudents: s.drawnStudents,
@@ -753,6 +878,7 @@ export const useAppStore = create(
         adjectiveStories: s.adjectiveStories,
         bomb: s.bomb,
         hangman: s.hangman,
+        gangemester: s.gangemester,
       }),
       // Default merge shallow-replaces top-level keys, so a `settings`
       // object persisted before a new setting was added (e.g.
@@ -768,6 +894,10 @@ export const useAppStore = create(
         hangman: {
           ...currentState.hangman,
           ...(persistedState?.hangman ?? {}),
+        },
+        gangemester: {
+          ...currentState.gangemester,
+          ...(persistedState?.gangemester ?? {}),
         },
         settings: {
           ...currentState.settings,

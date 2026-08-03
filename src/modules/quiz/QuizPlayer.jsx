@@ -6,6 +6,7 @@ import {
   Minus,
   Plus,
   RotateCcw,
+  UserPlus,
   X,
 } from "lucide-react";
 import { useAppStore } from "../../store/useAppStore";
@@ -20,6 +21,16 @@ function makeInitialBoard(quiz) {
     });
   });
   return board;
+}
+
+const TEAM_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+function nextTeamName(existingCount) {
+  const label =
+    existingCount < TEAM_LETTERS.length
+      ? TEAM_LETTERS[existingCount]
+      : existingCount + 1;
+  return `Lag ${label}`;
 }
 
 function makeInitialTeams() {
@@ -76,9 +87,26 @@ function QuizPlayer({ quizId, onDone }) {
     playSound("tick", soundEnabled);
   }
 
+  function addTeam() {
+    setTeams((ts) => [
+      ...ts,
+      { id: `team-${Date.now()}`, name: nextTeamName(ts.length), score: 0 },
+    ]);
+  }
+
+  function removeTeam(teamId) {
+    setTeams((ts) => (ts.length > 1 ? ts.filter((t) => t.id !== teamId) : ts));
+  }
+
+  function renameTeam(teamId, name) {
+    setTeams((ts) =>
+      ts.map((t) => (t.id === teamId ? { ...t, name } : t))
+    );
+  }
+
   function resetBoard() {
     setBoard(makeInitialBoard(quiz));
-    setTeams(makeInitialTeams());
+    setTeams((ts) => ts.map((t) => ({ ...t, score: 0 })));
     setActiveCell(null);
   }
 
@@ -111,15 +139,42 @@ function QuizPlayer({ quizId, onDone }) {
             {quiz.name}
           </h2>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           {teams.map((t) => (
-            <span
+            <div
               key={t.id}
-              className="rounded-xl2 border-2 border-ink/10 bg-surface px-5 py-2 font-heading text-xl font-semibold text-ink shadow-clay"
+              className="flex items-center gap-2 rounded-xl2 border-2 border-ink/10 bg-surface px-3 py-2 shadow-clay"
             >
-              {t.name}: {t.score}
-            </span>
+              <input
+                type="text"
+                value={t.name}
+                onChange={(e) => renameTeam(t.id, e.target.value)}
+                aria-label="Lagnavn"
+                className="w-24 bg-transparent font-heading text-xl font-semibold text-ink focus:outline-none"
+              />
+              <span className="font-heading text-xl font-semibold text-ink">
+                : {t.score}
+              </span>
+              {teams.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeTeam(t.id)}
+                  aria-label={`Fjern ${t.name}`}
+                  className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full text-ink/50 transition-colors hover:bg-ink/10 hover:text-ink"
+                >
+                  <X size={16} aria-hidden="true" />
+                </button>
+              )}
+            </div>
           ))}
+          <button
+            type="button"
+            onClick={addTeam}
+            className="flex min-h-touch cursor-pointer items-center gap-2 rounded-xl2 border-2 border-ink/10 px-4 py-2 font-heading font-semibold text-ink transition-colors hover:bg-ink/5"
+          >
+            <UserPlus size={20} aria-hidden="true" />
+            Legg til lag
+          </button>
           <button
             type="button"
             onClick={resetBoard}

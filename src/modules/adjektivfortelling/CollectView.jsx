@@ -17,7 +17,7 @@ function CollectView({ story, onBack, onComplete }) {
     e.preventDefault();
     const trimmed = value.trim();
     if (!trimmed) return;
-    const nextAnswers = { ...answers, [slot.index]: trimmed };
+    const nextAnswers = { ...answers, [slot.raw]: trimmed };
     if (isLast) {
       onComplete(nextAnswers);
       return;

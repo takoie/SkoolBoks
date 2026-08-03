@@ -20,7 +20,7 @@ function StoryList({ onOpen }) {
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <h2 className="font-heading text-3xl font-semibold text-ink">
-          Adjektivfortelling
+          Ordklassefortelling
         </h2>
         <button
           type="button"
