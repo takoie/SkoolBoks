@@ -145,7 +145,7 @@ export const useAppStore = create(
           };
         }),
 
-      settings: { soundEnabled: true, theme: "dark", gjetteLanguage: "bokmal" },
+      settings: { soundEnabled: true, theme: "light", gjetteLanguage: "bokmal" },
       setSettings: (partial) =>
         set((s) => ({ settings: { ...s.settings, ...partial } })),
 

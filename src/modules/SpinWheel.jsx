@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Dices, RotateCcw, Undo2, History, X } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { playSound } from "../lib/sound";
@@ -8,6 +9,7 @@ const SPIN_STEPS = 18;
 const SPIN_BASE_DELAY = 70;
 const DRAW_COUNT_PRESETS = [1, 2, 3, 4];
 const MAX_CUSTOM_DRAW_COUNT = 99;
+const EMPTY_ARRAY = [];
 
 function pluralElev(n) {
   return n === 1 ? "elev" : "elever";
@@ -31,10 +33,10 @@ function shuffle(array) {
 function SpinWheel() {
   const activeClassId = useAppStore((s) => s.activeClassId);
   const students = useAppStore(
-    (s) => s.classes[s.activeClassId]?.students ?? []
+    (s) => s.classes[s.activeClassId]?.students ?? EMPTY_ARRAY
   );
   const drawnStudents = useAppStore(
-    (s) => s.drawnStudents[s.activeClassId] ?? []
+    (s) => s.drawnStudents[s.activeClassId] ?? EMPTY_ARRAY
   );
   const markDrawn = useAppStore((s) => s.markDrawn);
   const resetDrawn = useAppStore((s) => s.resetDrawn);
@@ -149,25 +151,33 @@ function SpinWheel() {
     setDisplayNames(null);
   }
 
-  if (students.length === 0) {
-    return (
-      <div className="mx-auto max-w-2xl text-center">
-        <h2 className="mb-4 font-heading text-3xl font-semibold text-ink">
-          Elevtrekker
-        </h2>
-        <p className="text-lg text-ink/70">
-          Denne listen har ingen navn ennå. Gå til Navnelister for å legge
-          til navn.
-        </p>
-      </div>
-    );
-  }
-
   const shownNames = displayNames ?? winners;
 
   return (
     <div className="relative min-h-[32rem] w-full">
-      <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
+      {students.length === 0 &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in">
+            <div className="w-full max-w-md rounded-xl2 bg-surface p-8 text-center shadow-clay animate-modal-in">
+              <h2 className="mb-4 font-heading text-3xl font-bold text-primary">
+                Mangler navneliste
+              </h2>
+              <p className="mb-8 font-body text-lg text-ink/80">
+                Du må generere eller legge til en navneliste i databasen før du kan bruke Elevtrekker.
+              </p>
+              <button
+                type="button"
+                onClick={() => useAppStore.getState().setActiveModule("classlist")}
+                className="flex min-h-touch w-full cursor-pointer items-center justify-center gap-3 rounded-xl2 bg-primary px-6 py-3 font-heading text-lg font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97]"
+              >
+                Gå til Navnelister
+              </button>
+            </div>
+          </div>,
+          document.body
+        )}
+
+      <div className={`mx-auto flex max-w-2xl flex-col items-center text-center ${students.length === 0 ? "pointer-events-none opacity-20" : ""}`}>
         <h2 className="mb-2 font-heading text-3xl font-semibold text-ink">
           Elevtrekker
         </h2>
