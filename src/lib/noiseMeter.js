@@ -1,4 +1,4 @@
-export const ROUND_SECONDS = 5;
+export const ROUND_SECONDS = 6;
 
 export const COUNTDOWN_STEPS = [
   { label: "Gjør dere klare...", durationMs: 1500 },
@@ -8,10 +8,9 @@ export const COUNTDOWN_STEPS = [
   { label: "BRÅK!", durationMs: 600 },
 ];
 
-// Browser mics have no calibrated reference level, so this is a relative
-// loudness score (0-100), not a real dB SPL measurement. -55dB (near-silence
-// on a typical laptop mic) maps to 0, 0dB (full-scale clipping) maps to 100.
-const MIN_DB = -55;
+// Browser mics have no calibrated reference level, but we map relative loudness (dBFS)
+// to realistic classroom dBA values (~30 dBA to ~105 dBA).
+const MIN_DBFS = -55;
 
 export function levelFromTimeDomainData(dataArray) {
   let sumSquares = 0;
@@ -20,24 +19,57 @@ export function levelFromTimeDomainData(dataArray) {
     sumSquares += centered * centered;
   }
   const rms = Math.sqrt(sumSquares / dataArray.length);
-  if (rms <= 0) return 0;
-  const db = 20 * Math.log10(rms);
-  const clamped = Math.max(MIN_DB, Math.min(0, db));
-  return Math.round(((clamped - MIN_DB) / -MIN_DB) * 100);
+  if (rms <= 0) return { score: 0, db: 30, dbFS: MIN_DBFS, label: "Stille" };
+
+  const dbFS = 20 * Math.log10(rms);
+  const clampedDbFS = Math.max(MIN_DBFS, Math.min(0, dbFS));
+
+  // Percentage (0 - 100)
+  const score = Math.round(((clampedDbFS - MIN_DBFS) / -MIN_DBFS) * 100);
+
+  // Map to estimated classroom dB SPL / dBA (30 dB = silence, 105 dB = max scream)
+  const db = Math.round(30 + ((clampedDbFS - MIN_DBFS) / -MIN_DBFS) * 75);
+
+  let label = "Stille 🤫";
+  if (db >= 90) label = "Ekstremt bråk! 📢🚀";
+  else if (db >= 80) label = "Jubel og rop! 🎉";
+  else if (db >= 70) label = "Høy støy! 😃";
+  else if (db >= 55) label = "Tale og prating 🗣️";
+  else if (db >= 40) label = "Svak susing 💬";
+
+  return { score, db, dbFS: clampedDbFS, label };
 }
 
-// Ranks teams by score descending; teams without a recorded score sort last.
+// Ranks teams by average score descending; teams without a recorded score sort last.
 // Ties share the same rank (standard competition ranking).
 export function rankTeams(teams, scores) {
-  const sorted = [...teams].sort((a, b) => (scores[b.id] ?? -1) - (scores[a.id] ?? -1));
+  const getAvgDb = (id) => {
+    const scoreVal = scores[id];
+    if (scoreVal === undefined || scoreVal === null) return -1;
+    return typeof scoreVal === "number" ? scoreVal : (scoreVal.avgDb ?? -1);
+  };
+
+  const sorted = [...teams].sort((a, b) => getAvgDb(b.id) - getAvgDb(a.id));
   let rank = 0;
   let prevScore = null;
   return sorted.map((team, i) => {
-    const score = scores[team.id] ?? 0;
-    if (prevScore === null || score !== prevScore) {
-      rank = i + 1;
-      prevScore = score;
+    const scoreData = scores[team.id];
+    let avgDb = 0;
+    let peakDb = 0;
+
+    if (typeof scoreData === "number") {
+      avgDb = scoreData;
+      peakDb = scoreData;
+    } else if (scoreData && typeof scoreData === "object") {
+      avgDb = scoreData.avgDb ?? 0;
+      peakDb = scoreData.peakDb ?? 0;
     }
-    return { ...team, score, rank };
+
+    if (prevScore === null || avgDb !== prevScore) {
+      rank = i + 1;
+      prevScore = avgDb;
+    }
+    return { ...team, avgDb, peakDb, rank, score: avgDb };
   });
 }
+

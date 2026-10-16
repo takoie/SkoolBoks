@@ -20,6 +20,13 @@ import HangmanArena from "./modules/hangman/HangmanArena";
 import AdjektivfortellingArena from "./modules/adjektivfortelling/AdjektivfortellingArena";
 import GangemesterArena from "./modules/gangemester/GangemesterArena";
 import NoiseMeterArena from "./modules/noisemeter/NoiseMeterArena";
+import MafiaArena from "./modules/mafia/MafiaArena";
+import ByebyeArena from "./modules/byebye/ByebyeArena";
+import OktplanArena from "./modules/oktplan/OktplanArena";
+import UkasArena from "./modules/ukas/UkasArena";
+import DilemmaArena from "./modules/dilemma/DilemmaArena";
+import NotaterArena from "./modules/notater/NotaterArena";
+import OrdskyTankekartArena from "./modules/ordskytankekart/OrdskyTankekartArena";
 
 const MODULE_COMPONENTS = {
   dashboard: Dashboard,
@@ -38,6 +45,13 @@ const MODULE_COMPONENTS = {
   adjektivfortelling: AdjektivfortellingArena,
   gangemester: GangemesterArena,
   noisemeter: NoiseMeterArena,
+  mafia: MafiaArena,
+  byebye: ByebyeArena,
+  oktplan: OktplanArena,
+  ukas: UkasArena,
+  dilemma: DilemmaArena,
+  notater: NotaterArena,
+  ordskytankekart: OrdskyTankekartArena,
 };
 
 function App() {

@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { List, Plus, Trash2, Upload } from "lucide-react";
 import { useAppStore } from "../../store/useAppStore";
 import Select from "../../components/Select";
+import { parseWheelString } from "../../lib/wheelSpin";
 
 function SectorEditor({ sectors, onChange, disabled = false }) {
   const lists = useAppStore((s) => s.classes);
@@ -40,12 +41,17 @@ function SectorEditor({ sectors, onChange, disabled = false }) {
   }
 
   function applyImport() {
-    const labels = importText
-      .split("\n")
-      .map((l) => l.trim())
-      .filter(Boolean);
-    if (labels.length > 0) {
-      onChange(labels.map((label) => ({ id: crypto.randomUUID(), label })));
+    const parsed = parseWheelString(importText);
+    if (parsed && parsed.sectors.length > 0) {
+      onChange(parsed.sectors.map((label) => ({ id: crypto.randomUUID(), label })));
+    } else {
+      const labels = importText
+        .split("\n")
+        .map((l) => l.trim())
+        .filter(Boolean);
+      if (labels.length > 0) {
+        onChange(labels.map((label) => ({ id: crypto.randomUUID(), label })));
+      }
     }
     setImportText("");
     setImportOpen(false);

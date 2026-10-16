@@ -15,7 +15,7 @@ const accentClasses = {
   green: "bg-accent-green text-accent-ink",
 };
 
-function ModuleDrawer({ modules, onRestore }) {
+function ModuleDrawer({ modules, categories = [], onRestore }) {
   const [isOpen, setIsOpen] = useState(false);
 
   if (modules.length === 0) return null;
@@ -48,29 +48,55 @@ function ModuleDrawer({ modules, onRestore }) {
               >
                 <Plus size={16} strokeWidth={3} aria-hidden="true" />
               </button>
-              <div className="flex h-full min-h-[180px] w-full flex-col items-start gap-4 rounded-xl2 border-2 border-ink/10 bg-surface p-6 text-left opacity-60 shadow-clay">
-                {m.image ? (
-                  <img
-                    src={m.image}
-                    alt=""
-                    aria-hidden="true"
-                    className="h-14 w-14 rounded-2xl object-cover"
-                  />
-                ) : (
-                  <span
-                    className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl ${accentClasses[m.accent]}`}
-                  >
-                    <m.icon size={28} strokeWidth={2} aria-hidden="true" />
+              <div className="flex h-full min-h-[180px] w-full flex-col justify-between rounded-xl2 border-2 border-ink/10 bg-surface p-6 text-left opacity-60 shadow-clay">
+                <div className="flex flex-col items-start gap-4">
+                  {m.image ? (
+                    <img
+                      src={m.image}
+                      alt=""
+                      aria-hidden="true"
+                      className="h-14 w-14 rounded-2xl object-cover"
+                    />
+                  ) : (
+                    <span
+                      className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl ${accentClasses[m.accent]}`}
+                    >
+                      <m.icon size={28} strokeWidth={2} aria-hidden="true" />
+                    </span>
+                  )}
+                  <span>
+                    <span className="block font-heading text-2xl font-semibold text-ink">
+                      {m.title}
+                    </span>
+                    <span className="mt-1 block text-base text-ink/70">
+                      {m.description}
+                    </span>
                   </span>
+                </div>
+
+                {categories.length > 0 && (
+                  <div className="mt-4 pt-2 border-t border-ink/10">
+                    <select
+                      aria-label={`Vis ${m.title} i kategori`}
+                      defaultValue=""
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          onRestore(m.id, e.target.value);
+                        }
+                      }}
+                      className="w-full cursor-pointer rounded-xl border border-ink/20 bg-surface px-2.5 py-1 font-body text-xs font-semibold text-ink shadow-sm transition-colors hover:border-primary focus:outline-none"
+                    >
+                      <option value="" disabled>
+                        Vis i kategori...
+                      </option>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          📁 {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 )}
-                <span>
-                  <span className="block font-heading text-2xl font-semibold text-ink">
-                    {m.title}
-                  </span>
-                  <span className="mt-1 block text-base text-ink/70">
-                    {m.description}
-                  </span>
-                </span>
               </div>
             </div>
           ))}

@@ -1,4 +1,4 @@
-; Custom NSIS hooks for SkoolBox.
+; Custom NSIS hooks for SkoolBoks.
 ; Injected into the Tauri-generated installer/uninstaller via
 ; bundle.windows.nsis.installerHooks in tauri.conf.json.
 ;
@@ -24,6 +24,6 @@
   ; (e.g. files the app itself wrote next to the binary) and any stray
   ; Start Menu / registry entries the default uninstaller step might miss.
   RMDir /r "$INSTDIR"
-  DeleteRegKey HKCU "Software\SkoolBox"
-  DeleteRegKey /ifempty HKCU "Software\SkoolBox"
+  DeleteRegKey HKCU "Software\SkoolBoks"
+  DeleteRegKey /ifempty HKCU "Software\SkoolBoks"
 !macroend

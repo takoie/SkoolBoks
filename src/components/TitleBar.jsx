@@ -1,13 +1,38 @@
+import { useEffect } from "react";
 import { Minus, Square, X, Sun, Moon } from "lucide-react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { getCurrentWindow, currentMonitor } from "@tauri-apps/api/window";
 import { useAppStore } from "../store/useAppStore";
 
 const appWindow = getCurrentWindow();
+
+// Windows draws a borderless (decorations: false) window's native maximize —
+// and Aero Snap's drag-to-top-edge gesture — as the full monitor rectangle,
+// since there's no system frame to trigger the normal taskbar-aware sizing.
+// That leaves the taskbar rendered on top of the app. Whenever the window's
+// bounds grow to match the full monitor, snap them back down to the
+// monitor's work area (the region excluding the taskbar) instead.
+async function fitToWorkArea() {
+  const monitor = await currentMonitor();
+  if (!monitor) return;
+  const size = await appWindow.outerSize();
+  const coversFullMonitor = size.width === monitor.size.width && size.height === monitor.size.height;
+  if (!coversFullMonitor) return;
+  await appWindow.setPosition(monitor.workArea.position);
+  await appWindow.setSize(monitor.workArea.size);
+}
 
 function TitleBar() {
   const theme = useAppStore((s) => s.settings.theme);
   const setSettings = useAppStore((s) => s.setSettings);
   const isDark = theme !== "light";
+
+  useEffect(() => {
+    let unlisten;
+    appWindow.onResized(fitToWorkArea).then((fn) => {
+      unlisten = fn;
+    });
+    return () => unlisten?.();
+  }, []);
 
   return (
     <div className="flex h-10 items-center justify-between bg-primary-active pl-3 pr-0 text-white select-none">

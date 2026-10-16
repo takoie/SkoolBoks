@@ -11,6 +11,8 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
+.env.*
 
 # Git worktrees
 .worktrees
@@ -18,16 +20,22 @@ dist-ssr
 # Claude Code local settings
 .claude/settings.local.json
 
-# Editor directories and files
+# Editor, Agent & Tool directories
+.cursor/
+.impeccable/
+PRODUCT.md
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Project AI & Agent Tooling
 graphify-out/
 .claude/
 docs/plans/
@@ -35,6 +43,9 @@ CLAUDE.md
 README.md
 .agents/
 .vscode/
+docs/
 
-# Tauri updater private signing key — never commit this
+# Tauri build outputs & private key
+src-tauri/target/
+src-tauri/gen/schemas/
 src-tauri/updater.key

@@ -1,16 +1,19 @@
 @import "tailwindcss";
-@import "@fontsource/baloo-2/latin-400.css";
-@import "@fontsource/baloo-2/latin-500.css";
-@import "@fontsource/baloo-2/latin-600.css";
-@import "@fontsource/baloo-2/latin-700.css";
-@import "@fontsource/nunito/400.css";
-@import "@fontsource/nunito/600.css";
-@import "@fontsource/nunito/700.css";
+@import "@fontsource/bricolage-grotesque/latin-500.css";
+@import "@fontsource/bricolage-grotesque/latin-600.css";
+@import "@fontsource/bricolage-grotesque/latin-700.css";
+@import "@fontsource/bricolage-grotesque/latin-800.css";
+@import "@fontsource/figtree/latin-400.css";
+@import "@fontsource/figtree/latin-500.css";
+@import "@fontsource/figtree/latin-600.css";
+@import "@fontsource/figtree/latin-700.css";
+@import "@fontsource/figtree/latin-800.css";
 
 @theme {
   --color-primary: #4f46e5;
   --color-primary-hover: #4338ca;
   --color-primary-active: #3730a3;
+  --color-primary-contrast: #ffffff;
   --color-secondary: #3b82f6;
   --color-accent-lime: #84cc16;
   --color-accent-peach: #fdba74;
@@ -24,6 +27,9 @@
   --color-surface: #ffffff;
   --color-canvas: #f5f3ff;
   --color-ink: #1e1b4b;
+  --color-ink-muted: #3730a3;
+  --color-ink-subtle: #4f46e5;
+  --color-border-subtle: rgba(30, 27, 75, 0.12);
   --color-destructive: #dc2626;
 
   /* GjettE guess feedback — deliberately not Wordle's green/yellow/gray. */
@@ -49,24 +55,28 @@
   --color-accent-gold-ink: #a16207;
   --color-accent-green-ink: #15803d;
 
-  --font-heading: "Baloo 2", sans-serif;
-  --font-body: "Nunito", sans-serif;
+  --font-heading: "Bricolage Grotesque", "Figtree", sans-serif;
+  --font-body: "Figtree", system-ui, sans-serif;
 
-  --radius-xl2: 20px;
+  --radius-xl2: 14px;
 
-  --shadow-clay: 0 2px 0 rgba(30, 27, 75, 0.15), 0 8px 20px -6px rgba(67, 56, 202, 0.25);
+  --shadow-clay: 0 1px 0 rgba(30, 27, 75, 0.06), 0 4px 14px -6px rgba(30, 27, 75, 0.2);
   --shadow-wheel: 0 22px 44px -14px rgba(30, 27, 75, 0.5), 0 8px 18px -6px rgba(30, 27, 75, 0.3),
     inset 0 2px 5px rgba(255, 255, 255, 0.55);
   --shadow-hub: 0 10px 22px -6px rgba(30, 27, 75, 0.55), 0 3px 8px -2px rgba(30, 27, 75, 0.4),
     inset 0 2px 3px rgba(255, 255, 255, 0.4), inset 0 -3px 6px rgba(30, 27, 75, 0.25);
 
+  --spacing-touch-min: 44px;
   --spacing-touch: 64px;
 }
 
 .dark {
   --color-surface: #1d232a;
   --color-canvas: #15191e;
-  --color-ink: #c7d0da;
+  --color-ink: #f1f5f9;
+  --color-ink-muted: #cbd5e1;
+  --color-ink-subtle: #94a3b8;
+  --color-border-subtle: rgba(241, 245, 249, 0.15);
 
   --color-primary: #6366f1;
   --color-primary-hover: #4f46e5;
@@ -86,11 +96,19 @@
   --color-guess-present: #fbbf24;
   --color-guess-absent: #45415f;
 
-  --shadow-clay: 0 2px 0 rgba(0, 0, 0, 0.5), 0 8px 20px -6px rgba(0, 0, 0, 0.55);
+  --shadow-clay: 0 1px 0 rgba(0, 0, 0, 0.35), 0 4px 14px -6px rgba(0, 0, 0, 0.5);
   --shadow-wheel: 0 22px 44px -12px rgba(0, 0, 0, 0.7), 0 8px 20px -6px rgba(0, 0, 0, 0.55),
     inset 0 2px 5px rgba(255, 255, 255, 0.08);
   --shadow-hub: 0 10px 22px -6px rgba(0, 0, 0, 0.75), 0 3px 8px -2px rgba(0, 0, 0, 0.6),
     inset 0 2px 3px rgba(255, 255, 255, 0.12), inset 0 -3px 6px rgba(0, 0, 0, 0.35);
+}
+
+/* Fluid root size: every rem-based size (Tailwind spacing, text, radii) scales
+   with the display, so the app stays readable on a 1024px laptop and on a
+   projector or 4K smartboard without per-screen breakpoints. The vh term keeps
+   short, wide windows from growing taller than they can hold. */
+html {
+  font-size: clamp(14px, min(0.35vw + 11.5px, 0.9vh + 9px), 22px);
 }
 
 html,
@@ -222,7 +240,7 @@ h4 {
 }
 
 .animate-pop-in {
-  animation: pop-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: pop-in 0.22s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .animate-fade-in {
@@ -255,6 +273,52 @@ h4 {
 
 .animate-wiggle {
   animation: wiggle 0.45s ease-in-out infinite;
+}
+
+@keyframes auto-progress {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.auto-progress {
+  animation: auto-progress linear both;
+}
+
+/* 3D die (components/Die3D.jsx). Height comes from --die on an ancestor; the
+   WebGL canvas fills the stage and the die is thrown in over the surface. */
+.die-stage {
+  position: relative;
+  width: 100%;
+  height: calc(var(--die) * 2.15);
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-xl2);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-clay);
+}
+
+.die-stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Shown only when WebGL is unavailable. */
+.die-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-size: calc(var(--die) * 0.8);
+  font-weight: 800;
+  color: var(--color-primary);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -8,6 +8,8 @@ import {
   RotateCcw,
   Settings,
   MicOff,
+  Timer,
+  Flame,
 } from "lucide-react";
 import { useAppStore } from "../../store/useAppStore";
 import { playSound } from "../../lib/sound";
@@ -43,15 +45,23 @@ function NoiseMeterArena() {
   const [micError, setMicError] = useState(null);
   const [currentTeamIndex, setCurrentTeamIndex] = useState(0);
   const [countdownStep, setCountdownStep] = useState(0);
-  const [liveLevel, setLiveLevel] = useState(0);
-  const [lastScore, setLastScore] = useState(0);
+
+  // Måle-tilstander
+  const [liveMetrics, setLiveMetrics] = useState({ score: 0, db: 30, label: "Stille 🤫" });
+  const [runningAvgDb, setRunningAvgDb] = useState(30);
+  const [remainingSeconds, setRemainingSeconds] = useState(ROUND_SECONDS);
+  const [lastResult, setLastResult] = useState({ avgDb: 0, peakDb: 0, avgScore: 0 });
 
   const audioCtxRef = useRef(null);
   const analyserRef = useRef(null);
   const streamRef = useRef(null);
   const dataArrayRef = useRef(null);
   const rafIdRef = useRef(null);
-  const maxLevelRef = useRef(0);
+
+  const sumDbRef = useRef(0);
+  const sumScoreRef = useRef(0);
+  const countRef = useRef(0);
+  const peakDbRef = useRef(0);
 
   const teams = noiseMeter.teams;
   const currentTeam = teams[currentTeamIndex] ?? null;
@@ -115,21 +125,41 @@ function NoiseMeterArena() {
   }, [phase, countdownStep]);
 
   function beginMeasuring() {
-    maxLevelRef.current = 0;
-    setLiveLevel(0);
+    sumDbRef.current = 0;
+    sumScoreRef.current = 0;
+    countRef.current = 0;
+    peakDbRef.current = 0;
+    setLiveMetrics({ score: 0, db: 30, label: "Stille 🤫" });
+    setRunningAvgDb(30);
+    setRemainingSeconds(ROUND_SECONDS);
     setPhase("measuring");
 
     const analyser = analyserRef.current;
     const dataArray = dataArrayRef.current;
     const startedAt = performance.now();
 
-    function tick() {
+    function tick(now) {
+      if (!analyser || !dataArray) return;
       analyser.getByteTimeDomainData(dataArray);
-      const level = levelFromTimeDomainData(dataArray);
-      if (level > maxLevelRef.current) maxLevelRef.current = level;
-      setLiveLevel(level);
+      const metrics = levelFromTimeDomainData(dataArray);
 
-      if (performance.now() - startedAt < ROUND_SECONDS * 1000) {
+      sumDbRef.current += metrics.db;
+      sumScoreRef.current += metrics.score;
+      countRef.current += 1;
+      if (metrics.db > peakDbRef.current) {
+        peakDbRef.current = metrics.db;
+      }
+
+      const elapsedMs = now - startedAt;
+      const totalMs = ROUND_SECONDS * 1000;
+      const secondsLeft = Math.max(0, Math.ceil((totalMs - elapsedMs) / 1000));
+      setRemainingSeconds(secondsLeft);
+
+      const currentAvgDb = Math.round(sumDbRef.current / countRef.current);
+      setRunningAvgDb(currentAvgDb);
+      setLiveMetrics(metrics);
+
+      if (elapsedMs < totalMs) {
         rafIdRef.current = requestAnimationFrame(tick);
       } else {
         finishMeasuring();
@@ -141,9 +171,15 @@ function NoiseMeterArena() {
   function finishMeasuring() {
     if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
     rafIdRef.current = null;
-    const score = maxLevelRef.current;
-    setNoiseMeterScore(currentTeam.id, score);
-    setLastScore(score);
+
+    const count = countRef.current || 1;
+    const avgDb = Math.round(sumDbRef.current / count);
+    const avgScore = Math.round(sumScoreRef.current / count);
+    const peakDb = peakDbRef.current || avgDb;
+
+    const result = { avgDb, peakDb, avgScore };
+    setNoiseMeterScore(currentTeam.id, result);
+    setLastResult(result);
     playSound("tada", soundEnabled);
     setPhase("result");
   }
@@ -266,57 +302,120 @@ function NoiseMeterArena() {
 
       {phase === "measuring" && currentTeam && (
         <div className="flex w-full flex-col items-center gap-6 rounded-xl2 border-2 border-destructive/40 bg-destructive/5 p-8 shadow-clay">
-          <p className="font-heading text-2xl font-bold text-ink">{currentTeam.name}</p>
-          <p className="font-body text-sm text-ink/60">Bråk løs — mål er lydnivået!</p>
-          <div className="h-16 w-full overflow-hidden rounded-xl2 border-2 border-ink/10 bg-ink/5">
+          {/* Header & 6-sekunders nedtellingsklokke */}
+          <div className="flex w-full items-center justify-between">
+            <div>
+              <p className="font-heading text-2xl font-bold text-ink">{currentTeam.name}</p>
+              <p className="font-body text-xs text-ink/60">Bråk løs! Måler snitt-støy i 6 sekunder</p>
+            </div>
+            <div className="flex items-center gap-2 rounded-xl2 bg-destructive/15 px-4 py-2 text-destructive border-2 border-destructive/30 animate-pulse">
+              <Timer size={24} />
+              <span className="font-heading text-2xl font-bold">{remainingSeconds}s</span>
+            </div>
+          </div>
+
+          {/* Visuell lydmåler / nivålinje */}
+          <div className="h-14 w-full overflow-hidden rounded-xl2 border-2 border-ink/10 bg-ink/5 relative">
             <div
-              className="h-full rounded-xl2 bg-gradient-to-t from-primary via-accent-gold to-destructive transition-[width] duration-75 ease-out"
-              style={{ width: `${liveLevel}%` }}
+              className="h-full rounded-xl2 bg-gradient-to-r from-primary via-accent-gold to-destructive transition-[width] duration-75 ease-out"
+              style={{ width: `${liveMetrics.score}%` }}
             />
           </div>
-          <p className="font-heading text-5xl font-bold text-destructive">{liveLevel}</p>
+
+          {/* Sanntids dB-tall & statusbeskrivelse */}
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex items-baseline gap-1">
+              <span className="font-heading text-6xl font-extrabold text-destructive">{liveMetrics.db}</span>
+              <span className="font-heading text-2xl font-bold text-destructive/80">dB</span>
+            </div>
+            <p className="font-body text-base font-semibold text-ink/80">{liveMetrics.label}</p>
+          </div>
+
+          {/* Underveis-statistikk */}
+          <div className="grid w-full grid-cols-2 gap-4 rounded-xl2 bg-surface p-4 border-2 border-ink/10 text-center shadow-sm">
+            <div>
+              <p className="font-body text-xs text-ink/60 uppercase tracking-wider font-semibold">Snitt hittil (Vinnerkrav)</p>
+              <p className="font-heading text-2xl font-bold text-primary">{runningAvgDb} dB</p>
+            </div>
+            <div>
+              <p className="font-body text-xs text-ink/60 uppercase tracking-wider font-semibold flex items-center justify-center gap-1">
+                <Flame size={14} className="text-destructive" /> Maks-topp
+              </p>
+              <p className="font-heading text-2xl font-bold text-ink">{peakDbRef.current || liveMetrics.db} dB</p>
+            </div>
+          </div>
         </div>
       )}
 
       {phase === "result" && currentTeam && (
         <div className="flex w-full flex-col items-center gap-6 rounded-xl2 border-2 border-ink/10 bg-surface p-10 text-center shadow-clay animate-modal-in">
-          <p className="font-body text-base text-ink/70">{currentTeam.name} sin toppscore</p>
-          <p className="font-heading text-6xl font-bold text-primary">{lastScore}</p>
+          <p className="font-body text-base font-medium text-ink/70">Resultat for {currentTeam.name}</p>
+
+          <div className="flex flex-col items-center gap-1 rounded-xl2 bg-primary/10 border-2 border-primary/30 px-8 py-6 w-full">
+            <p className="font-body text-xs uppercase tracking-wider font-bold text-primary">Gjennomsnittlig støynivå (Vinnermål)</p>
+            <div className="flex items-baseline gap-2">
+              <span className="font-heading text-6xl font-extrabold text-primary">{lastResult.avgDb}</span>
+              <span className="font-heading text-3xl font-bold text-primary/80">dB</span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between w-full rounded-xl2 border-2 border-ink/10 px-6 py-3 bg-ink/5 font-body">
+            <span className="text-ink/70 text-sm font-medium">Høyeste enkeltnotering (Maks)</span>
+            <span className="font-heading text-lg font-bold text-ink">{lastResult.peakDb} dB</span>
+          </div>
+
           <button
             type="button"
             onClick={goToNextTeam}
-            className="flex min-h-touch cursor-pointer items-center justify-center gap-2 rounded-xl2 bg-primary px-8 py-4 font-heading text-lg font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97]"
+            className="flex min-h-touch cursor-pointer items-center justify-center gap-2 rounded-xl2 bg-primary px-8 py-4 font-heading text-lg font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97] w-full"
           >
-            {currentTeamIndex + 1 < teams.length ? "Neste lag →" : "Se resultater"}
+            {currentTeamIndex + 1 < teams.length ? "Neste lag →" : "Se resultater 🏆"}
           </button>
         </div>
       )}
 
       {phase === "scoreboard" && (
         <div className="flex w-full flex-col items-center gap-5 rounded-xl2 border-2 border-ink/10 bg-surface p-8 shadow-clay animate-modal-in">
-          <Trophy size={40} aria-hidden="true" className="text-accent-gold-ink" />
-          <p className="font-heading text-2xl font-bold text-ink">Resultater</p>
-          <div className="flex w-full flex-col gap-2">
+          <Trophy size={48} aria-hidden="true" className="text-accent-gold-ink" />
+          <div className="text-center">
+            <p className="font-heading text-2xl font-bold text-ink">Endelige resultater</p>
+            <p className="font-body text-xs text-ink/60">Rangert etter gjennomsnittlig støynivå (dB) over 6 sekunder</p>
+          </div>
+
+          <div className="flex w-full flex-col gap-3">
             {ranked.map((team) => (
               <div
                 key={team.id}
-                className={`flex items-center justify-between rounded-xl2 border-2 px-5 py-3 ${
+                className={`flex items-center justify-between rounded-xl2 border-2 px-5 py-4 ${
                   team.rank === 1
-                    ? "border-accent-gold bg-accent-gold/20"
+                    ? "border-accent-gold bg-accent-gold/20 shadow-sm"
                     : "border-ink/10"
                 }`}
               >
-                <span className="flex items-center gap-3 font-heading text-lg font-semibold text-ink">
-                  <span className="text-ink/40">#{team.rank}</span>
-                  {team.name}
-                  {team.rank === 1 && (
-                    <Trophy size={18} aria-hidden="true" className="text-accent-gold-ink" />
-                  )}
-                </span>
-                <span className="font-heading text-xl font-bold text-primary">{team.score}</span>
+                <div className="flex items-center gap-3">
+                  <span className="font-heading text-xl font-bold text-ink/40 w-6">#{team.rank}</span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-heading text-lg font-bold text-ink">{team.name}</span>
+                      {team.rank === 1 && (
+                        <Trophy size={20} aria-hidden="true" className="text-accent-gold-ink" />
+                      )}
+                    </div>
+                    <span className="font-body text-xs text-ink/60">Maks-topp: {team.peakDb} dB</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-end">
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-heading text-2xl font-extrabold text-primary">{team.avgDb}</span>
+                    <span className="font-heading text-sm font-bold text-primary/80">dB</span>
+                  </div>
+                  <span className="font-body text-[10px] uppercase font-bold text-primary/70">Snitt-støy</span>
+                </div>
               </div>
             ))}
           </div>
+
           <div className="mt-2 flex w-full flex-col gap-3">
             <button
               type="button"

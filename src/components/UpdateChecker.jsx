@@ -14,7 +14,7 @@ const STATUS = {
 };
 
 /**
- * Checks GitHub for a new SkoolBox release on mount and shows a dismissible
+ * Checks GitHub for a new SkoolBoks release on mount and shows a dismissible
  * banner when one is found. The user drives the download/install; nothing
  * happens automatically beyond the initial check.
  */
@@ -39,8 +39,8 @@ function UpdateChecker({ checkOnStartup = true }) {
         setStatus(STATUS.UP_TO_DATE);
       }
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : String(err));
-      setStatus(STATUS.ERROR);
+      console.debug("Update check skipped or unavailable:", err);
+      setStatus(STATUS.IDLE);
     }
   };
 
@@ -163,7 +163,7 @@ function UpdateChecker({ checkOnStartup = true }) {
                 Oppdatering installert
               </p>
               <p className="mt-0.5 text-sm text-neutral-600 dark:text-neutral-300">
-                Start SkoolBox på nytt for å ta i bruk den nye versjonen.
+                Start SkoolBoks på nytt for å ta i bruk den nye versjonen.
               </p>
               <div className="mt-3">
                 <button

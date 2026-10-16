@@ -7,13 +7,17 @@ import {
   Lock,
   PanelLeftClose,
   PanelLeftOpen,
+  ExternalLink,
+  ShieldAlert,
 } from "lucide-react";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useAppStore } from "../../store/useAppStore";
 import { playSound } from "../../lib/sound";
 import { fireConfetti } from "../../lib/confetti";
 import Select from "../../components/Select";
 import HangmanFigure from "../../components/hangman/HangmanFigure";
 import HangmanKeyboard from "./HangmanKeyboard";
+import SecretWordModal from "./SecretWordModal";
 import {
   LANGUAGES,
   alphabetForLanguage,
@@ -43,9 +47,80 @@ function HangmanArena() {
   const [gamehostDraft, setGamehostDraft] = useState("");
   const [showResult, setShowResult] = useState(false);
   const [showSettings, setShowSettings] = useState(true);
+  const [showSecretModal, setShowSecretModal] = useState(false);
 
   const maxWrongGuesses = getMaxWrongGuesses(hangman);
   const status = word ? getGameStatus(word, guessedLetters, wrongCount, maxWrongGuesses) : "idle";
+
+  // Listen for message from external popup window or broadcast channel
+  useEffect(() => {
+    function applySecretWord(secretWord) {
+      if (!secretWord) return;
+      setWord(secretWord.trim());
+      setGuessedLetters([]);
+      setWrongCount(0);
+      setShowResult(false);
+    }
+
+    function handleMessage(e) {
+      if (e.data && e.data.type === "HANGMAN_SECRET_WORD" && e.data.word) {
+        applySecretWord(e.data.word);
+      }
+    }
+
+    window.addEventListener("message", handleMessage);
+
+    let bc;
+    try {
+      bc = new BroadcastChannel("skoolboks-hangman");
+      bc.onmessage = (e) => {
+        if (e.data && e.data.type === "HANGMAN_SECRET_WORD" && e.data.word) {
+          applySecretWord(e.data.word);
+        }
+      };
+    } catch {}
+
+    return () => {
+      window.removeEventListener("message", handleMessage);
+      if (bc) bc.close();
+    };
+  }, []);
+
+  async function openExternalPopupWindow() {
+    try {
+      const existing = await WebviewWindow.getByLabel("hangman-secret");
+      if (existing) {
+        await existing.setFocus();
+        return;
+      }
+      const webview = new WebviewWindow("hangman-secret", {
+        url: "/secret-hangman.html",
+        title: "Hemmelig Hangman-ord",
+        width: 540,
+        height: 380,
+        resizable: true,
+        decorations: true,
+        alwaysOnTop: true,
+      });
+
+      webview.once("tauri://error", (err) => {
+        console.error("Tauri WebviewWindow error:", err);
+        setShowSecretModal(true);
+      });
+    } catch (err) {
+      console.warn("Could not create Tauri WebviewWindow, attempting window.open fallback", err);
+      try {
+        const popup = window.open(
+          "/secret-hangman.html",
+          "HangmanSecretWordWindow",
+          "width=540,height=380,resizable=yes,scrollbars=no,status=no,toolbar=no"
+        );
+        if (!popup) setShowSecretModal(true);
+      } catch {
+        setShowSecretModal(true);
+      }
+    }
+  }
 
   function resetRound() {
     setWord(null);
@@ -255,9 +330,8 @@ function HangmanArena() {
             </div>
 
             {source === "gamehost" && (
-              <p className="font-body text-sm text-ink/60">
-                Skriv inn ordet nede på siden og trykk «Skjul ordet og start» —
-                ordet vises aldri på skjermen før spillets slutt.
+              <p className="font-body text-sm text-ink/70 leading-relaxed">
+                Som gamehost kan du enten åpne et eget hemmelig vindu (som du drar til egen skjerm) eller skrive ordet direkte nedenfor.
               </p>
             )}
           </div>
@@ -300,28 +374,61 @@ function HangmanArena() {
         )}
 
         {!word && source === "gamehost" && (
-          <form onSubmit={startGamehostRound} className="flex w-full flex-col gap-3">
-            <label className="flex flex-col gap-1 text-left font-body text-base text-ink">
-              Ordet som skal gjettes
-              <input
-                type="text"
-                value={gamehostDraft}
-                onChange={(e) => setGamehostDraft(e.target.value)}
-                placeholder="Skriv inn ordet her"
-                autoComplete="off"
-                spellCheck="false"
-                className="min-h-touch w-full rounded-xl2 border-2 border-ink/10 bg-surface px-4 py-2 font-heading text-xl tracking-wide"
-              />
-            </label>
-            <button
-              type="submit"
-              disabled={!gamehostDraft.trim()}
-              className="flex min-h-touch cursor-pointer items-center justify-center gap-3 rounded-xl2 bg-secondary px-8 py-4 font-heading text-xl font-semibold text-white transition-all duration-150 hover:brightness-95 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <Lock size={20} aria-hidden="true" />
-              Skjul ordet og start
-            </button>
-          </form>
+          <div className="flex w-full flex-col gap-6">
+            {/* Popout options for teachers */}
+            <div className="rounded-xl2 border-2 border-secondary/30 bg-secondary/5 p-5 text-left space-y-3">
+              <div className="flex items-center gap-2 text-secondary font-heading font-bold text-base">
+                <ShieldAlert size={20} />
+                <span>Skjul ordet for elever (forhindre juks)</span>
+              </div>
+              <p className="text-sm font-medium text-ink/80 leading-relaxed">
+                Åpne et hemmelig inntastingsvindu som du kan dra over til din egen pc/lærerskjerm slik at elever ikke ser bokstavene mens du skriver!
+              </p>
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={openExternalPopupWindow}
+                  className="flex min-h-touch cursor-pointer items-center gap-2 rounded-xl bg-secondary px-5 py-2.5 font-heading text-sm font-bold text-white transition-colors hover:brightness-95 shadow-md"
+                >
+                  <ExternalLink size={18} />
+                  <span>Åpne i eget vindu (dra til lærerskjerm)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowSecretModal(true)}
+                  className="flex min-h-touch cursor-pointer items-center gap-2 rounded-xl border-2 border-secondary/40 bg-surface px-4 py-2.5 font-heading text-sm font-bold text-ink hover:bg-secondary/10 transition-colors"
+                >
+                  <Lock size={18} />
+                  <span>Åpne hemmelig dialog (med maskering)</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Direct Inline Input Form */}
+            <form onSubmit={startGamehostRound} className="flex w-full flex-col gap-3 rounded-xl2 border-2 border-ink/10 bg-surface p-5 text-left shadow-clay">
+              <label className="flex flex-col gap-1 font-body text-base font-bold text-ink">
+                Eller skriv inn ordet direkte her
+                <input
+                  type="text"
+                  value={gamehostDraft}
+                  onChange={(e) => setGamehostDraft(e.target.value)}
+                  placeholder="Skriv inn ordet her..."
+                  autoComplete="off"
+                  spellCheck="false"
+                  className="min-h-touch w-full rounded-xl border-2 border-ink/10 bg-background px-4 py-2.5 font-heading text-xl tracking-wide font-bold text-ink focus:border-secondary focus:outline-none"
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={!gamehostDraft.trim()}
+                className="flex min-h-touch cursor-pointer items-center justify-center gap-3 rounded-xl bg-secondary px-8 py-3 font-heading text-lg font-bold text-white transition-all duration-150 hover:brightness-95 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 shadow-sm"
+              >
+                <Lock size={20} aria-hidden="true" />
+                Skjul ordet og start spillet
+              </button>
+            </form>
+          </div>
         )}
 
         {word && (
@@ -434,6 +541,17 @@ function HangmanArena() {
           </div>,
           document.body
         )}
+
+      <SecretWordModal
+        isOpen={showSecretModal}
+        onClose={() => setShowSecretModal(false)}
+        onSubmitWord={(secretWord) => {
+          setWord(secretWord);
+          setGuessedLetters([]);
+          setWrongCount(0);
+          setShowResult(false);
+        }}
+      />
     </div>
   );
 }

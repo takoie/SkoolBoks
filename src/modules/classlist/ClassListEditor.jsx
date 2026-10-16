@@ -1,6 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Plus, X } from "lucide-react";
 import { useAppStore } from "../../store/useAppStore";
+
+function parseNames(text) {
+  return text
+    .split(/[\n;]/)
+    .map((n) => n.trim())
+    .filter(Boolean);
+}
 
 function ClassListEditor({ classId, onBack }) {
   const classes = useAppStore((s) => s.classes);
@@ -11,21 +18,30 @@ function ClassListEditor({ classId, onBack }) {
   const activeClass = classes[classId] ?? { name: "", students: [] };
   const [draft, setDraft] = useState("");
   const [nameDraft, setNameDraft] = useState(activeClass.name);
+  const inputRef = useRef(null);
 
   useEffect(() => {
     setNameDraft(activeClass.name);
     setDraft("");
   }, [classId, activeClass.name]);
 
-  function handleSaveNames() {
-    const names = draft
-      .split("\n")
-      .map((n) => n.trim())
-      .filter(Boolean);
-    if (names.length === 0) return;
-    setStudents(classId, [...activeClass.students, ...names]);
-    resetDrawn(classId);
+  // Takes one name (Enter) or many (pasted lines) and skips ones already in
+  // the list - names double as React keys and removal targets.
+  function addNames(text) {
+    const known = new Set(activeClass.students.map((s) => s.toLowerCase()));
+    const fresh = [];
+    for (const name of parseNames(text)) {
+      const key = name.toLowerCase();
+      if (known.has(key)) continue;
+      known.add(key);
+      fresh.push(name);
+    }
+    if (fresh.length > 0) {
+      setStudents(classId, [...activeClass.students, ...fresh]);
+      resetDrawn(classId);
+    }
     setDraft("");
+    inputRef.current?.focus();
   }
 
   function handleRemoveStudent(name) {
@@ -36,69 +52,74 @@ function ClassListEditor({ classId, onBack }) {
     resetDrawn(classId);
   }
 
+  function handlePaste(e) {
+    const text = e.clipboardData.getData("text");
+    if (!/[\n;]/.test(text)) return;
+    e.preventDefault();
+    addNames(text);
+  }
+
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto max-w-4xl">
       <button
         type="button"
         onClick={onBack}
-        className="mb-6 flex cursor-pointer items-center gap-2 font-heading font-semibold text-primary transition-colors hover:text-primary-hover"
+        className="mb-4 flex cursor-pointer items-center gap-2 font-heading font-semibold text-primary transition-colors hover:text-primary-hover"
       >
         <ArrowLeft size={20} aria-hidden="true" />
-        Tilbake til navnelister
+        Navnelister
       </button>
 
-      <h2 className="mb-6 font-heading text-3xl font-semibold text-ink">
-        Rediger navneliste
-      </h2>
+      <input
+        type="text"
+        value={nameDraft}
+        onChange={(e) => setNameDraft(e.target.value)}
+        onBlur={() => renameClass(classId, nameDraft)}
+        aria-label="Navn på listen"
+        className="mb-8 w-full rounded-xl2 border border-transparent bg-transparent px-2 py-1 font-heading text-3xl font-semibold text-ink transition-colors hover:border-ink/10 focus:border-primary focus:bg-surface focus:outline-none"
+      />
 
-      <label className="mb-6 block">
-        <span className="mb-2 block font-heading text-lg font-semibold text-ink">
-          Navn på listen
-        </span>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          addNames(draft);
+        }}
+        className="mb-2 flex gap-3"
+      >
         <input
+          ref={inputRef}
           type="text"
-          value={nameDraft}
-          onChange={(e) => setNameDraft(e.target.value)}
-          onBlur={() => renameClass(classId, nameDraft)}
-          className="min-h-touch w-full rounded-xl2 border-2 border-ink/10 bg-surface px-4 py-2 font-body text-lg text-ink"
-        />
-      </label>
-
-      <label className="mb-2 block">
-        <span className="mb-2 block font-heading text-lg font-semibold text-ink">
-          Lim inn navn (ett navn per linje)
-        </span>
-        <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          rows={6}
-          placeholder={"Ola Nordmann\nKari Nordmann\n..."}
-          className="w-full rounded-xl2 border-2 border-ink/10 bg-surface px-4 py-3 font-body text-lg text-ink"
+          onPaste={handlePaste}
+          placeholder="Skriv et navn og trykk Enter"
+          aria-label="Legg til navn"
+          className="min-h-touch min-w-0 flex-1 rounded-xl2 border-2 border-ink/10 bg-surface px-4 py-2 font-body text-lg text-ink focus:border-primary focus:outline-none"
         />
-      </label>
-      <button
-        type="button"
-        onClick={handleSaveNames}
-        disabled={draft.trim().length === 0}
-        className="mb-8 flex min-h-touch cursor-pointer items-center gap-2 rounded-xl2 bg-primary px-6 py-2 font-heading font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        <Plus size={20} aria-hidden="true" />
-        Legg til navn
-      </button>
+        <button
+          type="submit"
+          disabled={draft.trim().length === 0}
+          className="flex min-h-touch cursor-pointer items-center gap-2 rounded-xl2 bg-primary px-6 py-2 font-heading font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <Plus size={20} aria-hidden="true" />
+          Legg til
+        </button>
+      </form>
+      <p className="mb-8 text-sm text-ink/60">
+        Har du en hel liste? Lim den inn her, ett navn per linje.
+      </p>
 
       <h3 className="mb-3 font-heading text-xl font-semibold text-ink">
         Navn ({activeClass.students.length})
       </h3>
       {activeClass.students.length === 0 ? (
-        <p className="text-lg text-ink/60">
-          Ingen navn lagt til ennå. Lim inn navn over for å komme i gang.
-        </p>
+        <p className="text-lg text-ink/60">Ingen navn ennå.</p>
       ) : (
-        <ul className="flex flex-wrap gap-3">
+        <ul className="flex flex-wrap gap-2">
           {activeClass.students.map((name) => (
             <li
               key={name}
-              className="flex items-center gap-2 rounded-full bg-surface border-2 border-ink/10 px-4 py-2 font-body text-lg text-ink shadow-clay"
+              className="flex items-center gap-1 rounded-full border border-ink/10 bg-surface py-1 pl-4 pr-1 font-body text-lg text-ink"
             >
               {name}
               <button

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Dices,
   Trophy,
@@ -12,9 +13,17 @@ import {
   Skull,
   Feather,
   Sigma,
-  Pencil,
-  Check,
   Volume2,
+  VenetianMask,
+  PartyPopper,
+  ListOrdered,
+  CalendarDays,
+  Check,
+  Pencil,
+  FolderPlus,
+  GitFork,
+  StickyNote,
+  Cloud,
 } from "lucide-react";
 import {
   DndContext,
@@ -23,20 +32,12 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import {
-  SortableContext,
-  arrayMove,
-  rectSortingStrategy,
-} from "@dnd-kit/sortable";
-import { useAppStore } from "../store/useAppStore";
-import ModuleCard from "../components/ModuleCard";
+import { arrayMove } from "@dnd-kit/sortable";
+import { useAppStore, normalizeDashboardState } from "../store/useAppStore";
 import ModuleDrawer from "../components/ModuleDrawer";
+import DashboardDrawer from "./dashboard/DashboardDrawer";
 import stianIcon from "../img/stian.png";
 
-// Distinct icon-background hues, cycled in order below so every module gets
-// a different color from its neighbors. Add a new hue here (and to
-// ModuleCard's accentClasses + the theme colors in index.css) once this list
-// is exhausted, rather than reusing one that's already assigned.
 const ACCENT_ORDER = [
   "primary",
   "secondary",
@@ -138,12 +139,50 @@ const MODULES = [
     title: "Støymeter",
     description: "Lag-konkurranse i å lage mest mulig lyd — nedtelling og resultattavle.",
   },
+  {
+    id: "mafia",
+    icon: VenetianMask,
+    title: "Mafia",
+    description: "Klassisk gruppespill — led natten, diskuter og avslør mafiaen.",
+  },
+  {
+    id: "byebye",
+    icon: PartyPopper,
+    title: "Byebye!",
+    description: "Trekk hvem som kan rydde og gå hjem — farger, bursdag, bokstaver eller navn.",
+  },
+  {
+    id: "oktplan",
+    icon: ListOrdered,
+    title: "Øktplan",
+    description: "Bygg og kjør sammensatte økter med tidsintervaller og klasseromsaktiviteter.",
+  },
+  {
+    id: "ukas",
+    icon: CalendarDays,
+    title: "Ukas..",
+    description: "Tidsplan og logistikk for roterende elevaktiviteter uten karakterer.",
+  },
+  {
+    id: "dilemma",
+    icon: GitFork,
+    title: "Dilemma",
+    description: "Opprett og kjør økter med visuelle dilemmaer — hjørnevalg og standpunkter.",
+  },
+  {
+    id: "notater",
+    icon: StickyNote,
+    title: "Notater",
+    description: "Personlige sticky notes og interaktiv klassetavle.",
+  },
+  {
+    id: "ordskytankekart",
+    icon: GitFork,
+    title: "Tankekart",
+    description: "Visuelt tankekart og interaktiv tavle for klasserommet.",
+  },
 ];
 
-// Modules with an explicit `accent` (or an `image`, like Stians game) keep
-// their fixed color; everything else is assigned the next unused hue from
-// ACCENT_ORDER in declaration order, so newly added modules automatically
-// get a color no earlier module is using.
 let nextAccentIndex = 0;
 for (const m of MODULES) {
   if (!m.accent && !m.image) {
@@ -153,73 +192,191 @@ for (const m of MODULES) {
 }
 
 const MODULES_BY_ID = Object.fromEntries(MODULES.map((m) => [m.id, m]));
+const ALL_MODULE_IDS = MODULES.map((m) => m.id);
 
-// Splits the static MODULES list into visible/hidden module objects using
-// the persisted order/hidden id lists. Ids missing from both (a module
-// added after this state was last saved) default to visible, appended at
-// the end; ids that no longer match a real module (one that was removed
-// from the codebase) are dropped.
-function resolveModules(dashboard) {
-  const knownIds = new Set([...dashboard.order, ...dashboard.hidden]);
-  const newIds = MODULES.filter((m) => !knownIds.has(m.id)).map((m) => m.id);
+function resolveDashboard(dashboard) {
+  const normalized = normalizeDashboardState(dashboard, ALL_MODULE_IDS);
 
-  const visible = [...dashboard.order, ...newIds]
-    .map((id) => MODULES_BY_ID[id])
-    .filter(Boolean);
-  const hidden = dashboard.hidden.map((id) => MODULES_BY_ID[id]).filter(Boolean);
+  const categories = normalized.categories.map((cat) => ({
+    id: cat.id,
+    name: cat.name,
+    modules: cat.moduleIds.map((id) => MODULES_BY_ID[id]).filter(Boolean),
+  }));
 
-  return { visible, hidden };
+  const hidden = normalized.hidden.map((id) => MODULES_BY_ID[id]).filter(Boolean);
+
+  return { categories, hidden, rawCategories: normalized.categories };
 }
 
 function Dashboard() {
   const setActiveModule = useAppStore((s) => s.setActiveModule);
-  const activeClass = useAppStore(
-    (s) => s.classes[s.activeClassId] ?? { name: "", students: [] }
-  );
   const dashboard = useAppStore((s) => s.dashboard);
   const isEditMode = useAppStore((s) => s.isEditMode);
   const toggleEditMode = useAppStore((s) => s.toggleEditMode);
   const hideModule = useAppStore((s) => s.hideModule);
   const showModule = useAppStore((s) => s.showModule);
-  const reorderModules = useAppStore((s) => s.reorderModules);
+  const addCategory = useAppStore((s) => s.addCategory);
+  const renameCategory = useAppStore((s) => s.renameCategory);
+  const deleteCategory = useAppStore((s) => s.deleteCategory);
+  const moveCategory = useAppStore((s) => s.moveCategory);
+  const moveModuleToCategory = useAppStore((s) => s.moveModuleToCategory);
+  const reorderModulesInCategory = useAppStore(
+    (s) => s.reorderModulesInCategory
+  );
 
-  const { visible, hidden } = resolveModules(dashboard);
+  const { categories, hidden, rawCategories } = resolveDashboard(dashboard);
+
+  const [collapsedCategories, setCollapsedCategories] = useState({});
+  const [editingCategoryId, setEditingCategoryId] = useState(null);
+  const [editingName, setEditingName] = useState("");
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } })
   );
 
+  function toggleCollapse(catId) {
+    setCollapsedCategories((prev) => ({
+      ...prev,
+      [catId]: !prev[catId],
+    }));
+  }
+
+  function handleAddCategorySubmit(e) {
+    e.preventDefault();
+    if (!newCategoryName.trim()) return;
+    addCategory(newCategoryName.trim());
+    setNewCategoryName("");
+    setIsCreatingCategory(false);
+  }
+
+  function handleRenameSubmit(catId, e) {
+    e.preventDefault();
+    if (editingName.trim()) {
+      renameCategory(catId, editingName.trim());
+    }
+    setEditingCategoryId(null);
+  }
+
   function handleDragEnd(event) {
     const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    const oldIndex = visible.findIndex((m) => m.id === active.id);
-    const newIndex = visible.findIndex((m) => m.id === over.id);
-    if (oldIndex === -1 || newIndex === -1) return;
-    reorderModules(arrayMove(visible, oldIndex, newIndex).map((m) => m.id));
+    if (!over) return;
+
+    const activeId = active.id;
+    const overId = over.id;
+
+    let sourceCatId = null;
+    if (hidden.some((m) => m.id === activeId)) {
+      sourceCatId = "hidden";
+    } else {
+      const cat = categories.find((c) =>
+        c.modules.some((m) => m.id === activeId)
+      );
+      if (cat) sourceCatId = cat.id;
+    }
+
+    if (!sourceCatId) return;
+
+    let targetCatId = null;
+    if (
+      overId === "hidden-drawer" ||
+      hidden.some((m) => m.id === overId)
+    ) {
+      targetCatId = "hidden";
+    } else {
+      const targetCat = categories.find(
+        (c) =>
+          c.id === overId ||
+          `cat-container-${c.id}` === overId ||
+          c.modules.some((m) => m.id === overId)
+      );
+      if (targetCat) targetCatId = targetCat.id;
+    }
+
+    if (!targetCatId) return;
+
+    if (sourceCatId === targetCatId) {
+      if (sourceCatId === "hidden") {
+        const hiddenIds = hidden.map((m) => m.id);
+        const oldIndex = hiddenIds.indexOf(activeId);
+        const newIndex = hiddenIds.indexOf(overId);
+        if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+          reorderModulesInCategory("hidden", arrayMove(hiddenIds, oldIndex, newIndex));
+        }
+      } else {
+        const cat = categories.find((c) => c.id === sourceCatId);
+        const moduleIds = cat.modules.map((m) => m.id);
+        const oldIndex = moduleIds.indexOf(activeId);
+        const newIndex = moduleIds.indexOf(overId);
+        if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+          reorderModulesInCategory(
+            sourceCatId,
+            arrayMove(moduleIds, oldIndex, newIndex)
+          );
+        }
+      }
+    } else {
+      moveModuleToCategory(activeId, targetCatId);
+    }
   }
+
+  const categoryOptions = rawCategories.map((c) => ({
+    id: c.id,
+    name: c.name,
+  }));
 
   return (
     <div className="w-full">
-      {activeClass.students.length === 0 && (
-        <button
-          type="button"
-          onClick={() => setActiveModule("classlist")}
-          className="mb-8 flex w-full cursor-pointer items-center justify-between rounded-xl2 border-2 border-dashed border-primary/40 bg-primary/5 px-6 py-4 text-left transition-colors hover:bg-primary/10"
-        >
-          <span className="font-body text-lg text-ink">
-            Navnelisten din er tom — legg til navn for å bruke Elevtrekker.
-          </span>
-          <span className="font-heading font-semibold text-primary">
-            Gå til Navnelister →
-          </span>
-        </button>
-      )}
+      {/* Top action bar */}
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          {isCreatingCategory ? (
+            <form
+              onSubmit={handleAddCategorySubmit}
+              className="flex items-center gap-2"
+            >
+              <input
+                type="text"
+                autoFocus
+                placeholder="Kategorinavn..."
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                className="rounded-xl border-2 border-primary/40 bg-surface px-4 py-2 font-heading font-semibold text-ink focus:border-primary focus:outline-none"
+              />
+              <button
+                type="submit"
+                className="flex cursor-pointer items-center gap-1.5 rounded-xl border-2 border-primary bg-primary px-4 py-2 font-heading font-semibold text-white shadow-clay transition-all hover:bg-primary-hover"
+              >
+                Lagre
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCreatingCategory(false);
+                  setNewCategoryName("");
+                }}
+                className="cursor-pointer rounded-xl border-2 border-ink/10 bg-surface px-3 py-2 font-heading font-semibold text-ink/70 hover:bg-ink/5"
+              >
+                Avbryt
+              </button>
+            </form>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsCreatingCategory(true)}
+              className="flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl2 border-2 border-primary/30 bg-primary/5 px-5 py-2.5 font-heading font-semibold text-primary shadow-sm transition-all hover:border-primary hover:bg-primary/10 active:scale-95 focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <FolderPlus size={20} aria-hidden="true" />
+              Opprett ny kategori
+            </button>
+          )}
+        </div>
 
-      <div className="mb-6 flex justify-end">
         <button
           type="button"
           onClick={toggleEditMode}
-          className="flex cursor-pointer items-center gap-2 rounded-xl2 border-2 border-ink/10 bg-surface px-4 py-2 font-heading font-semibold text-ink shadow-clay transition-colors hover:border-primary/40"
+          className="flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl2 border-2 border-border-subtle bg-surface px-5 py-2.5 font-heading font-semibold text-ink shadow-clay transition-colors hover:border-primary/50 active:scale-95 focus-visible:ring-2 focus-visible:ring-primary"
         >
           {isEditMode ? (
             <>
@@ -240,27 +397,40 @@ function Dashboard() {
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
       >
-        <SortableContext items={visible.map((m) => m.id)} strategy={rectSortingStrategy}>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-6">
-            {visible.map((m) => (
-              <ModuleCard
-                key={m.id}
-                id={m.id}
-                icon={m.icon}
-                image={m.image}
-                title={m.title}
-                description={m.description}
-                accent={m.accent}
-                onClick={() => setActiveModule(m.id)}
-                isEditMode={isEditMode}
-                onRemove={() => hideModule(m.id)}
-              />
-            ))}
-          </div>
-        </SortableContext>
+        <div className="space-y-8">
+          {categories.map((cat, index) => (
+            <DashboardDrawer
+              key={cat.id}
+              cat={cat}
+              index={index}
+              totalCategories={categories.length}
+              isCollapsed={collapsedCategories[cat.id]}
+              isEditingThisCat={editingCategoryId === cat.id}
+              editingName={editingName}
+              setEditingName={setEditingName}
+              setEditingCategoryId={setEditingCategoryId}
+              onToggleCollapse={toggleCollapse}
+              onRenameSubmit={handleRenameSubmit}
+              onMoveCategory={moveCategory}
+              onDeleteCategory={deleteCategory}
+              isEditMode={isEditMode}
+              setActiveModule={setActiveModule}
+              hideModule={hideModule}
+              moveModuleToCategory={moveModuleToCategory}
+              categoryOptions={categoryOptions}
+            />
+          ))}
+        </div>
       </DndContext>
 
-      <ModuleDrawer modules={hidden} onRestore={showModule} />
+      {/* Hidden modules drawer at the bottom */}
+      <div id="hidden-drawer">
+        <ModuleDrawer
+          modules={hidden}
+          categories={categoryOptions}
+          onRestore={(id, targetCatId) => showModule(id, targetCatId)}
+        />
+      </div>
     </div>
   );
 }

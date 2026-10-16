@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import { Dices, RotateCcw, Undo2, History, X } from "lucide-react";
+import { Dices, RotateCcw, Undo2, History, UserPlus, X } from "lucide-react";
 import { useAppStore } from "../store/useAppStore";
 import { playSound } from "../lib/sound";
 import { fireConfetti } from "../lib/confetti";
@@ -155,29 +154,26 @@ function SpinWheel() {
 
   return (
     <div className="relative min-h-[32rem] w-full">
-      {students.length === 0 &&
-        createPortal(
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 animate-fade-in">
-            <div className="w-full max-w-md rounded-xl2 bg-surface p-8 text-center shadow-clay animate-modal-in">
-              <h2 className="mb-4 font-heading text-3xl font-bold text-primary">
-                Mangler navneliste
-              </h2>
-              <p className="mb-8 font-body text-lg text-ink/80">
-                Du må generere eller legge til en navneliste i databasen før du kan bruke Elevtrekker.
-              </p>
-              <button
-                type="button"
-                onClick={() => useAppStore.getState().setActiveModule("classlist")}
-                className="flex min-h-touch w-full cursor-pointer items-center justify-center gap-3 rounded-xl2 bg-primary px-6 py-3 font-heading text-lg font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97]"
-              >
-                Gå til Navnelister
-              </button>
-            </div>
-          </div>,
-          document.body
-        )}
+      {students.length === 0 && (
+        <div className="mx-auto flex max-w-xl flex-col items-center text-center">
+          <h2 className="mb-2 font-heading text-3xl font-semibold text-ink">
+            Elevtrekker
+          </h2>
+          <p className="mb-6 text-lg text-ink/70">
+            Denne klassen har ingen navn ennå. Legg til navn for å trekke elever.
+          </p>
+          <button
+            type="button"
+            onClick={() => useAppStore.getState().setActiveModule("classlist")}
+            className="flex min-h-touch cursor-pointer items-center justify-center gap-3 rounded-xl2 bg-primary px-6 py-3 font-heading text-lg font-semibold text-white transition-all duration-150 hover:bg-primary-hover active:scale-[0.97]"
+          >
+            <UserPlus size={22} aria-hidden="true" />
+            Legg til navn
+          </button>
+        </div>
+      )}
 
-      <div className={`mx-auto flex max-w-2xl flex-col items-center text-center ${students.length === 0 ? "pointer-events-none opacity-20" : ""}`}>
+      <div className={`mx-auto flex max-w-2xl flex-col items-center text-center ${students.length === 0 ? "hidden" : ""}`}>
         <h2 className="mb-2 font-heading text-3xl font-semibold text-ink">
           Elevtrekker
         </h2>
@@ -285,7 +281,7 @@ function SpinWheel() {
         </label>
       </div>
 
-      {!historyOpen && (
+      {!historyOpen && students.length > 0 && (
         <button
           type="button"
           onClick={() => setHistoryOpen(true)}
@@ -298,8 +294,8 @@ function SpinWheel() {
 
       <aside
         className={`absolute inset-y-0 right-0 z-20 flex w-full shrink-0 flex-col border-l-2 border-ink/10 bg-surface p-5 text-left shadow-clay transition-transform duration-300 sm:w-96 ${
-          historyOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+          students.length === 0 ? "hidden" : ""
+        } ${historyOpen ? "translate-x-0" : "translate-x-full"}`}
       >
         <div className="mb-4 flex shrink-0 items-center justify-between gap-3">
           <h3 className="font-heading text-xl font-semibold text-ink">

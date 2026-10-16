@@ -34,6 +34,24 @@ const sounds = {
       tone(freq, t + i * 0.02, 0.6, 0.22)
     );
   },
+  nightChime: () => {
+    const t = getCtx().currentTime;
+    [329.63, 261.63, 220].forEach((freq, i) =>
+      tone(freq, t + i * 0.2, 0.6, 0.18)
+    );
+  },
+  dayGong: () => {
+    const t = getCtx().currentTime;
+    [440, 554.37, 659.25].forEach((freq, i) =>
+      tone(freq, t + i * 0.15, 0.7, 0.2)
+    );
+  },
+  elimination: () => {
+    const t = getCtx().currentTime;
+    [196, 185, 174.61].forEach((freq, i) =>
+      tone(freq, t + i * 0.15, 0.5, 0.2)
+    );
+  },
 };
 
 export function playSound(name, enabled) {

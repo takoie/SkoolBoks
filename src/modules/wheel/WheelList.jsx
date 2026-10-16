@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { Pencil, Play, Trash2, Plus } from "lucide-react";
+import { Pencil, Play, Trash2, Plus, Share2, Download } from "lucide-react";
 import { useAppStore } from "../../store/useAppStore";
+import { WheelExportModal, WheelImportModal } from "./WheelShareModals";
 
 function WheelList({ onOpen }) {
   const wheels = useAppStore((s) => s.wheels);
   const createWheel = useAppStore((s) => s.createWheel);
+  const importWheel = useAppStore((s) => s.importWheel);
   const renameWheel = useAppStore((s) => s.renameWheel);
   const deleteWheel = useAppStore((s) => s.deleteWheel);
 
@@ -15,6 +17,8 @@ function WheelList({ onOpen }) {
   const [newName, setNewName] = useState("");
   const [renamingId, setRenamingId] = useState(null);
   const [renameDraft, setRenameDraft] = useState("");
+  const [exportingWheel, setExportingWheel] = useState(null);
+  const [showImport, setShowImport] = useState(false);
 
   function handleNewWheel() {
     setNewName(`Hjul ${list.length + 1}`);
@@ -26,6 +30,13 @@ function WheelList({ onOpen }) {
     const id = createWheel(name);
     setShowCreate(false);
     onOpen(id);
+  }
+
+  function handleImportWheel(parsed) {
+    const newId = importWheel(parsed);
+    if (newId) {
+      onOpen(newId);
+    }
   }
 
   function startRename(wheel) {
@@ -42,19 +53,29 @@ function WheelList({ onOpen }) {
     <div className="mx-auto max-w-6xl">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <h2 className="font-heading text-3xl font-semibold text-ink">Hjul</h2>
-        <button
-          type="button"
-          onClick={handleNewWheel}
-          className="flex min-h-touch cursor-pointer items-center gap-2 rounded-xl2 bg-primary px-5 py-2 font-heading font-semibold text-white transition-colors hover:bg-primary-hover"
-        >
-          <Plus size={20} aria-hidden="true" />
-          Nytt hjul
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowImport(true)}
+            className="flex min-h-touch cursor-pointer items-center gap-2 rounded-xl2 border-2 border-ink/10 bg-surface px-5 py-2 font-heading font-semibold text-ink transition-colors hover:bg-ink/5"
+          >
+            <Download size={20} aria-hidden="true" />
+            Importer hjul
+          </button>
+          <button
+            type="button"
+            onClick={handleNewWheel}
+            className="flex min-h-touch cursor-pointer items-center gap-2 rounded-xl2 bg-primary px-5 py-2 font-heading font-semibold text-white transition-colors hover:bg-primary-hover"
+          >
+            <Plus size={20} aria-hidden="true" />
+            Nytt hjul
+          </button>
+        </div>
       </div>
 
       {list.length === 0 ? (
         <p className="text-lg text-ink/60">
-          Ingen hjul laget ennå. Klikk «Nytt hjul» for å komme i gang.
+          Ingen hjul laget ennå. Klikk «Nytt hjul» eller «Importer hjul» for å komme i gang.
         </p>
       ) : (
         <ul className="flex flex-col gap-4">
@@ -97,6 +118,14 @@ function WheelList({ onOpen }) {
                 </button>
                 <button
                   type="button"
+                  onClick={() => setExportingWheel(wheel)}
+                  aria-label={`Eksporter ${wheel.name}`}
+                  className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-ink/50 transition-colors hover:bg-ink/10 hover:text-ink"
+                >
+                  <Share2 size={20} aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
                   onClick={() => startRename(wheel)}
                   aria-label={`Gi nytt navn til ${wheel.name}`}
                   className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-ink/50 transition-colors hover:bg-ink/10 hover:text-ink"
@@ -115,6 +144,20 @@ function WheelList({ onOpen }) {
             </li>
           ))}
         </ul>
+      )}
+
+      {exportingWheel && (
+        <WheelExportModal
+          wheel={exportingWheel}
+          onClose={() => setExportingWheel(null)}
+        />
+      )}
+
+      {showImport && (
+        <WheelImportModal
+          onImport={handleImportWheel}
+          onClose={() => setShowImport(false)}
+        />
       )}
 
       {showCreate &&
@@ -163,3 +206,4 @@ function WheelList({ onOpen }) {
 }
 
 export default WheelList;
+

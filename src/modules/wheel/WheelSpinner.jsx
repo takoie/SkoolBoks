@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, PanelRightClose, PanelRightOpen, RotateCcw, Undo2 } from "lucide-react";
+import { ArrowLeft, PanelRightClose, PanelRightOpen, RotateCcw, Undo2, Share2 } from "lucide-react";
 import { useAppStore } from "../../store/useAppStore";
 import { playSound } from "../../lib/sound";
 import { fireConfetti } from "../../lib/confetti";
 import { pickWinnerIndex, computeSpinRotation, randomLandingOffset, sectorColor } from "../../lib/wheelSpin";
 import SectorEditor from "./SectorEditor";
+import { WheelExportModal } from "./WheelShareModals";
 
 const WHEEL_SIZE = 360;
 const RADIUS = WHEEL_SIZE / 2;
@@ -83,6 +84,7 @@ function WheelSpinner({ wheelId, onBack }) {
   const [hasSpunOnce, setHasSpunOnce] = useState(false);
   const [showEditor, setShowEditor] = useState(true);
   const [showWinnerModal, setShowWinnerModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [respinTrigger, setRespinTrigger] = useState(0);
   const [nameDraft, setNameDraft] = useState(wheel.name);
 
@@ -226,9 +228,18 @@ function WheelSpinner({ wheelId, onBack }) {
           />
           <button
             type="button"
+            onClick={() => setShowExportModal(true)}
+            aria-label="Eksporter hjul"
+            title="Eksporter hjul"
+            className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-ink/70 transition-colors hover:bg-ink/10"
+          >
+            <Share2 size={22} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
             onClick={() => setShowEditor((v) => !v)}
             aria-label={showEditor ? "Skjul sektor-listen" : "Vis sektor-listen"}
-            className="ml-auto flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-ink/70 transition-colors hover:bg-ink/10"
+            className="ml-[2px] flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-ink/70 transition-colors hover:bg-ink/10"
           >
             {showEditor ? (
               <PanelRightClose size={22} aria-hidden="true" />
@@ -414,6 +425,13 @@ function WheelSpinner({ wheelId, onBack }) {
           </div>,
           document.body
         )}
+
+      {showExportModal && (
+        <WheelExportModal
+          wheel={wheel}
+          onClose={() => setShowExportModal(false)}
+        />
+      )}
     </div>
   );
 }

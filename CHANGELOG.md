@@ -1,10 +1,24 @@
 # Changelog
 
-All notable changes to SkoolBox are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+All notable changes to SkoolBoks are documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-16
+
+### Changed
+- Roligere og mer voksent design: nye skrifttyper (Bricolage Grotesque og Figtree), flatere modulkort med mindre radius og dempede skygger, og lett animasjon uten sprett.
+- Hele appen skalerer nå flytende med skjermoppløsningen (rot-fontstørrelse), så den fungerer fra 1024px-laptop til projektor og 4K-tavle.
+- Navnelister: ingen faste bannere eller popup-er når listen er tom; Elevtrekker viser en rolig melding inne i modulen, og redigeringssiden har ett felt der Enter legger til navn og innliming av hele lister fungerer.
+- Nærmest tusen har fått fast layout (ingen hopping av knapper), 3×3-rutenett for trukne tall med fasit i samme rutenett, og er tilpasset prosjektorvisning.
+- Reorganized documentation structure by consolidating old plan files and initializing design, brand, and UI/UX skill libraries with supporting schemas and automation scripts.
+- Archived obsolete plan files and established foundational design, brand, and UI/UX skill libraries with supporting documentation and automation infrastructure.
+
 ### Added
+- Nærmest tusen: ekte 3D-terning (d10 med sifrene 0–9) som kastes inn, spretter og lander, der flaten som lander markeres gul og blinker.
+- Nærmest tusen: «Automatisk runde» som trekker et tall hvert 3. sekund til alle ni er trukket.
+- Utvidet "Ukas.."-modulen med ny forside/oversiktsside som viser alle opprettede opplegg i kortvisning med fremdrift og handlingsknapper (åpne, redigere, eksportere, slette), samt ny støtte for eksport og import av opplegg (delingskode, JSON, ren tekst) og opprydding/justering av topplinjens knapper og dropdowns.
+- Utvidet informasjons-popup ("Om SkoolBoks") med ny fane for "Personvern & GDPR" (som gjør rede for 100 % lokal lagring, ingen skylagring og lenker til norske retningslinjer fra Datatilsynet og Udir) og en fane for "Lisenser".
 - Six new game modules (Bomb, Hangman, Gjette, ToFakta, Gangemester, NoiseMeter) and ClassList editor/overview, plus Windows production build with auto-updates via Tauri installer and updater plugin.
 - Production Windows build configuration with NSIS installer, pre/post-install cleanup hooks, and automatic GitHub-hosted updates via tauri-plugin-updater with UpdateChecker UI.
 - Adjektivfortelling module registration in App.jsx and Dashboard component for full dashboard and routing integration.
@@ -31,6 +45,7 @@ All notable changes to SkoolBox are documented here. Format follows [Keep a Chan
 - Stians game: Scoreboard highlights the category column currently under review and previews pending points live as "forrige+endring" (e.g. "0+1") before the round is committed.
 
 ### Changed
+- Endret appnavnet fra SkoolBox til SkoolBoks i hele applikasjonen, UI og konfigurasjonsfiler.
 - Registered Adjektivfortelling module in App.jsx routing and Dashboard component integration.
 - Updated CHANGELOG.md to document recent Wheel module improvements including sector import, presentation mode, landing point randomization, idle-spin animation, tick sound, and label rendering.
 - Wheel spinner animation now uses quintic ease-out and longer duration (5.5s) for more suspenseful deceleration that crawls noticeably in the final stretch before landing.
